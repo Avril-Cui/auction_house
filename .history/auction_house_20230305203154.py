@@ -1,0 +1,3 @@
+
+class BotEvaluatorSaasmpssle:
+    my = "HI"

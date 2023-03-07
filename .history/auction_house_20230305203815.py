@@ -1,0 +1,3 @@
+
+class BotEvaluatorSample:
+    my = "HI"

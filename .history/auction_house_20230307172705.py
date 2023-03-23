@@ -39,10 +39,10 @@ class BotEvaluatorSample:
 		lt_moving_avg = self.price_info.rolling(
 			window=self.lt_moving_avg_period).mean().to_list()
 		if st_moving_avg[self.time_stamp] > lt_moving_avg[self.time_stamp] and st_moving_avg[self.time_stamp-1] <= lt_moving_avg[self.time_stamp-1]:
-			print("crosses above, bot buy in")
+			print("Crosses above, bot buys.")
 			return -1
 		elif st_moving_avg[self.time_stamp] < lt_moving_avg[self.time_stamp] and st_moving_avg[self.time_stamp-1] >= lt_moving_avg[self.time_stamp-1]:
-			print("crosses above, bot sell")
+			print("Crosses above, bot sells.")
 			return 1
 		else:
 			return 0
@@ -90,27 +90,19 @@ ordered_book = OrderedDict(((27, 10), (26, 20), (25, 30), (24, 40), (23, 50), (2
 time_stamp = 287
 bot = BotEvaluatorSample(price_info, current_price, ordered_book, time_stamp)
 result = bot.evaluator()
-# print(result)
-st_moving_avg = price_info.rolling(window=15).mean().to_list()
-lt_moving_avg = price_info.rolling(window=30).mean().to_list()
-# for index in range(len(price_info)):
-# 	if st_moving_avg[index] > lt_moving_avg[index] and st_moving_avg[index-1] <= lt_moving_avg[index-1]:
-# 		print(index, "UP")
-# 	elif st_moving_avg[index] < lt_moving_avg[index] and st_moving_avg[index-1] >= lt_moving_avg[index-1]:
-# 		print(index, "DOWN")
 
+
+
+
+
+
+
+
+#Graphing:
+# st_moving_avg = price_info.rolling(window=15).mean().to_list()
+# lt_moving_avg = price_info.rolling(window=30).mean().to_list()
 # import matplotlib.pyplot as plt
 # plt.plot(price_info.to_list())
 # plt.plot(st_moving_avg)
 # plt.plot(lt_moving_avg)
 # plt.show()
-
-# class BotEvaluatorSample:
-# 	def __init__(
-# 			self,
-# 			price_info: list,
-# 			current_price: float,
-# 			ordered_book: OrderedDict,
-# 			stock_name: str,
-# 			time_stamp: float,
-# 	):

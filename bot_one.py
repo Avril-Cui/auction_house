@@ -1,13 +1,3 @@
-"""
-Simple Auction House Strategy Model
-Rule1 [Moving Average] -> direction:
-	When shorter-term MA crosses above the long-term MA: buy, return -1
-	When shorter-term MA crosses below the long-term MA: sell, return +1
-Rule2 [Surplus] -> trade the order with maximum surplus:
-	Buy: highest sell order, return 1, 0.8, 0.6, 0.4, 0.2
-	Sell: lowest buy order, return -1, -0.8, -0.6, -0.4, -0.2
-"""
-
 from collections import OrderedDict
 from pandas_datareader import data as pdr
 import yfinance as yf
@@ -15,34 +5,19 @@ import pandas as pd
 yf.pdr_override()
 
 
-class BotEvaluatorSample:
-	def __init__(
-			self,
-			price_info: pd.DataFrame,
-			current_price: float,
-			ordered_book: OrderedDict,
-			time_stamp: float
-	):
-		"""
-			OrderedDict(((price, share), ("c", '3'), ("b", "2")))
-		"""
-		self.price_info: pd.DataFrame = price_info
-		self.current_price: float = current_price
-		self.ordered_book: dict = ordered_book
-		self.time_stamp: float = time_stamp
-		self.st_moving_avg_period: int = 15
-		self.lt_moving_avg_period: int = 30
+class BotOne:
 
-	def stg_ma(self):
-		st_moving_avg = self.price_info.rolling(
-			window=self.st_moving_avg_period).mean().to_list()
-		lt_moving_avg = self.price_info.rolling(
-			window=self.lt_moving_avg_period).mean().to_list()
-		if st_moving_avg[self.time_stamp] > lt_moving_avg[self.time_stamp] and st_moving_avg[self.time_stamp-1] <= lt_moving_avg[self.time_stamp-1]:
-			print("Crosses above, bot buys.")
+	def __init__(self) -> None:
+		pass
+
+	def stg_ma(self, price_info, time_stamp, st_moving_avg_period, lt_moving_avg_period):
+		st_moving_avg = price_info.rolling(
+			window=st_moving_avg_period).mean().to_list()
+		lt_moving_avg = price_info.rolling(
+			window=lt_moving_avg_period).mean().to_list()
+		if st_moving_avg[time_stamp] > lt_moving_avg[time_stamp] and st_moving_avg[time_stamp-1] <= lt_moving_avg[time_stamp-1]:
 			return -1
-		elif st_moving_avg[self.time_stamp] < lt_moving_avg[self.time_stamp] and st_moving_avg[self.time_stamp-1] >= lt_moving_avg[self.time_stamp-1]:
-			print("Crosses above, bot sells.")
+		elif st_moving_avg[time_stamp] < lt_moving_avg[time_stamp] and st_moving_avg[time_stamp-1] >= lt_moving_avg[time_stamp-1]:
 			return 1
 		else:
 			return 0
@@ -50,47 +25,132 @@ class BotEvaluatorSample:
 	def stg_surplus(self, index):
 		return 0.2 * index
 	
-	def evaluator(self):
+	def stg_momentum(self, price_info, volume_info, moving_avg_period, time_stamp):
+		price_moving_avg = price_info.rolling(window=moving_avg_period).mean().to_list()
+		volume_moving_avg = volume_info.rolling(window=moving_avg_period).mean().to_list()
+		price_list = price_info.to_list()
+		volume_list = volume_info.to_list()
+
+		if price_list[time_stamp] < price_moving_avg[time_stamp] and volume_list[time_stamp] > volume_moving_avg[time_stamp]:
+			return -1
+		elif price_list[time_stamp] > price_moving_avg[time_stamp] and volume_list[time_stamp] < volume_moving_avg[time_stamp]:
+			return 1
+		else:
+			return 0
+
+	def evaluator_ma_surplus(self, price_info, time_stamp, ordered_book, st_moving_avg_period=15, lt_moving_avg_period=30):
+		"""
+			Rule1 [Moving Average] -> direction:
+				BUY: When shorter-term MA crosses above the long-term MA: buy, return -1
+				SELL: When shorter-term MA crosses below the long-term MA: sell, return +1
+			Rule2 [Surplus] -> trade the order with maximum surplus:
+				Buy: highest sell order, return 1, 0.8, 0.6, 0.4, 0.2
+				Sell: lowest buy order, return -1, -0.8, -0.6, -0.4, -0.2
+		"""
+		
 		print("Bot 1: MA and surplus")
 		print("---------------------")
 		price = 0
 		share = 0
 		score = 0
-		coefficient = self.stg_ma()
+		coefficient = self.stg_ma(price_info, time_stamp, st_moving_avg_period, lt_moving_avg_period)
 		if coefficient == -1:
-			for price_tmp in self.ordered_book:
-				if self.ordered_book[price_tmp] < 0:
-					index = list(self.ordered_book.keys()).index(price_tmp)
+			for price_tmp in ordered_book:
+				if ordered_book[price_tmp] < 0:
+					index = list(ordered_book.keys()).index(price_tmp)
 					score_tmp = self.stg_surplus(index) * coefficient
 					if abs(score_tmp) > score:
-						score = abs(score_tmp)
-						share = self.ordered_book[price_tmp]
+						score = score_tmp
+						share = ordered_book[price_tmp]
 						price = price_tmp
 		elif coefficient == 1:
-			for price_tmp in self.ordered_book:
-				if self.ordered_book[price_tmp] > 0:
-					price_list = list(self.ordered_book.keys())
+			for price_tmp in ordered_book:
+				if ordered_book[price_tmp] > 0:
+					price_list = list(ordered_book.keys())
 					price_list.reverse()
 					index = price_list.index(price_tmp)
 					score_tmp = self.stg_surplus(index) * coefficient
 					if abs(score_tmp) > score:
 						score = abs(score_tmp)
-						share = self.ordered_book[price_tmp]
+						share = ordered_book[price_tmp]
 						price = price_tmp
 		
-		if score != 0:
-			print(f"Highest score is {score}. Bot trade at ${price} for {share} shares.")
+		if score < 0:
+			print(f"Highest score is {score}. Bot buys at ${price} for {share} shares. \n")
+			return price, share, score
+		elif score > 0:
+			print(f"Highest score is {score}. Bot sells at ${price} for {share} shares. \n")
 			return price, share, score
 		else:
-			return "no translation should proceed"
+			return "No translation should proceed. \n"
 
-price_info = pdr.get_data_yahoo("AAPL", "2015-3-9", "2017-1-1")['Adj Close']
-current_price = price_info.to_list()[287]
-ordered_book = OrderedDict(((int(current_price)+5, 10), (int(current_price)+4, 20), (int(current_price)+3, 30), (int(current_price)+2, 40), (int(current_price)+1, 50), (int(current_price)-1, -50), (int(current_price)-2, -40), (int(current_price)-3, -30), (int(current_price)-4, -20), (int(current_price)-5, -10)))
+	def evaluator_momentum_surplus(self, price_info, volume_info, time_stamp, ordered_book, moving_avg_period=30):
+		"""
+			Rule1 [Momentum] -> direction:
+				BUY:  When stock price is below the x day moving average and the daily
+					  volume is above the 30 day moving average, return -1.
+				SELL: When stock price is above the x day moving average and the daily
+					  volume is below the 30 day moving average, return +1.
+			Rule2 [Surplus] -> trade the order with maximum surplus:
+				Buy: highest sell order, return 1, 0.8, 0.6, 0.4, 0.2
+				Sell: lowest buy order, return -1, -0.8, -0.6, -0.4, -0.2
+		"""
+
+		print("Bot 2: Momentum and surplus")
+		print("---------------------------")
+		price = 0
+		share = 0
+		score = 0
+		coefficient = self.stg_momentum(price_info, volume_info, moving_avg_period, time_stamp)
+		
+		if coefficient == -1:
+			for price_tmp in ordered_book:
+				if ordered_book[price_tmp] < 0:
+					index = list(ordered_book.keys()).index(price_tmp)
+					score_tmp = self.stg_surplus(index) * coefficient
+					if abs(score_tmp) > score:
+						score = score_tmp
+						share = ordered_book[price_tmp]
+						price = price_tmp
+		elif coefficient == 1:
+			for price_tmp in ordered_book:
+				if ordered_book[price_tmp] > 0:
+					price_list = list(ordered_book.keys())
+					price_list.reverse()
+					index = price_list.index(price_tmp)
+					score_tmp = self.stg_surplus(index) * coefficient
+					if abs(score_tmp) > score:
+						score = abs(score_tmp)
+						share = ordered_book[price_tmp]
+						price = price_tmp
+		else:
+			score = 0
+		
+		if score < 0:
+			print(f"Highest score is {score}. Bot buys at ${price} for {share} shares. \n")
+			return price, share, score
+		elif score > 0:
+			print(f"Highest score is {score}. Bot sells at ${price} for {share} shares. \n")
+			return price, share, score
+		else:
+			print("No translation should proceed. \n")
+
+
+
+price_data = pdr.get_data_yahoo("AAPL", "2015-3-9", "2017-1-1")
+bot = BotOne()
+
+###Bot One
 time_stamp = 287
-bot = BotEvaluatorSample(price_info, current_price, ordered_book, time_stamp)
-result = bot.evaluator()
+current_price = price_data['Adj Close'].to_list()[287]
+ordered_book = OrderedDict(((int(current_price)+5, 10), (int(current_price)+4, 20), (int(current_price)+3, 30), (int(current_price)+2, 40), (int(current_price)+1, 50), (int(current_price)-1, -50), (int(current_price)-2, -40), (int(current_price)-3, -30), (int(current_price)-4, -20), (int(current_price)-5, -10)))
+result = bot.evaluator_ma_surplus(price_data['Adj Close'], time_stamp, ordered_book)
 
+###Bot Two
+time_stamp = 47
+current_price = price_data['Adj Close'].to_list()[287]
+ordered_book = OrderedDict(((int(current_price)+5, 10), (int(current_price)+4, 20), (int(current_price)+3, 30), (int(current_price)+2, 40), (int(current_price)+1, 50), (int(current_price)-1, -50), (int(current_price)-2, -40), (int(current_price)-3, -30), (int(current_price)-4, -20), (int(current_price)-5, -10)))
+result = bot.evaluator_momentum_surplus(price_data['Adj Close'], price_data['Volume'], time_stamp, ordered_book, 30)
 
 
 

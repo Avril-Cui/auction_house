@@ -53,6 +53,23 @@ class BotOne:
 		else:
 			return 0	
 
+	def stg_donchian_breakout(self, price_info, moving_avg_period, time_stamp):
+		if time_stamp == 0:
+			return 0
+		else:
+			moving_high = price_info.rolling(window = moving_avg_period).max().to_list()[time_stamp-1]
+			moving_low = price_info.rolling(window = moving_avg_period).min().to_list()[time_stamp-1]
+			current_price = price_info.to_list()[time_stamp]
+
+			if current_price < moving_low:
+				return -1
+			elif current_price > moving_high:
+				return 1
+			else:
+				print(current_price, moving_low, moving_high)
+				return 0
+
+
 	def evaluator_ma_surplus(self, price_info, time_stamp, ordered_book, st_moving_avg_period=15, lt_moving_avg_period=30):
 		"""
 			Rule1 [Moving Average] -> direction:
@@ -91,7 +108,7 @@ class BotOne:
 						price = price_tmp
 		
 		if score < 0:
-			print(f"Highest score is {score}. Bot buys at ${price} for {share} shares. \n")
+			print(f"Highest absolute score is {abs(score)}. Bot buys at ${price} for {abs(share)} shares. \n")
 			return price, share, score
 		elif score > 0:
 			print(f"Highest score is {score}. Bot sells at ${price} for {share} shares. \n")
@@ -142,7 +159,7 @@ class BotOne:
 			score = 0
 		
 		if score < 0:
-			print(f"Highest score is {score}. Bot buys at ${price} for {share} shares. \n")
+			print(f"Highest absolute score is {abs(score)}. Bot buys at ${price} for {abs(share)} shares. \n")
 			return price, share, score
 		elif score > 0:
 			print(f"Highest score is {score}. Bot sells at ${price} for {share} shares. \n")
@@ -160,7 +177,7 @@ class BotOne:
 				Sell: lowest buy order, return -1, -0.8, -0.6, -0.4, -0.2
 		"""
 
-		print("Bot 3: ")
+		print("Bot 3: Mean reversion and surplus")
 		print("---------------------------")
 		price = 0
 		share = 0
@@ -191,7 +208,56 @@ class BotOne:
 			score = 0
 		
 		if score < 0:
-			print(f"Highest score is {score}. Bot buys at ${price} for {share} shares. \n")
+			print(f"Highest absolute score is {abs(score)}. Bot buys at ${price} for {abs(share)} shares. \n")
+			return price, share, score
+		elif score > 0:
+			print(f"Highest score is {score}. Bot sells at ${price} for {share} shares. \n")
+			return price, share, score
+		else:
+			print("No translation should proceed. \n")
+
+	def evaluator_donchian_breakout_surplus(self, price_info, time_stamp, ordered_book, moving_avg_period=30):
+		"""
+			Rule1 [Donchian Breakout] -> direction:
+				BUY: When price is below Donchian lower bound
+				SELL: When the price is above Donchian upper boud
+			Rule2 [Surplus] -> trade the order with maximum surplus:
+				Buy: highest sell order, return 1, 0.8, 0.6, 0.4, 0.2
+				Sell: lowest buy order, return -1, -0.8, -0.6, -0.4, -0.2
+		"""
+
+		print("Bot 4: Donchian breakout and surplus")
+		print("------------------------------------")
+		price = 0
+		share = 0
+		score = 0
+		coefficient = self.stg_donchian_breakout(price_info, moving_avg_period, time_stamp)
+		
+		if coefficient == -1:
+			for price_tmp in ordered_book:
+				if ordered_book[price_tmp] < 0:
+					index = list(ordered_book.keys()).index(price_tmp)
+					score_tmp = self.stg_surplus(index) * coefficient
+					if abs(score_tmp) > score:
+						score = score_tmp
+						share = ordered_book[price_tmp]
+						price = price_tmp
+		elif coefficient == 1:
+			for price_tmp in ordered_book:
+				if ordered_book[price_tmp] > 0:
+					price_list = list(ordered_book.keys())
+					price_list.reverse()
+					index = price_list.index(price_tmp)
+					score_tmp = self.stg_surplus(index) * coefficient
+					if abs(score_tmp) > score:
+						score = abs(score_tmp)
+						share = ordered_book[price_tmp]
+						price = price_tmp
+		else:
+			score = 0
+		
+		if score < 0:
+			print(f"Highest absolute score is {abs(score)}. Bot buys at ${price} for {abs(share)} shares. \n")
 			return price, share, score
 		elif score > 0:
 			print(f"Highest score is {score}. Bot sells at ${price} for {share} shares. \n")
@@ -220,6 +286,11 @@ current_price = price_data['Adj Close'].to_list()[time_stamp]
 ordered_book = OrderedDict(((int(current_price)+5, 10), (int(current_price)+4, 20), (int(current_price)+3, 30), (int(current_price)+2, 40), (int(current_price)+1, 50), (int(current_price)-1, -50), (int(current_price)-2, -40), (int(current_price)-3, -30), (int(current_price)-4, -20), (int(current_price)-5, -10)))
 result = bot.evaluator_mean_reversion_surplus(price_data['Adj Close'], time_stamp, ordered_book, 30, 1)
 
+###Bot Four
+time_stamp = 78
+current_price = price_data['Adj Close'].to_list()[time_stamp]
+ordered_book = OrderedDict(((int(current_price)+5, 10), (int(current_price)+4, 20), (int(current_price)+3, 30), (int(current_price)+2, 40), (int(current_price)+1, 50), (int(current_price)-1, -50), (int(current_price)-2, -40), (int(current_price)-3, -30), (int(current_price)-4, -20), (int(current_price)-5, -10)))
+result = bot.evaluator_donchian_breakout_surplus(price_data['Adj Close'], time_stamp, ordered_book, 30)
 
 #Graphing:
 # st_moving_avg = price_info.rolling(window=15).mean().to_list()

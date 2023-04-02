@@ -1,8 +1,7 @@
 from collections import OrderedDict
-from numpy import std
+import random
 from pandas_datareader import data as pdr
 import yfinance as yf
-import pandas as pd
 yf.pdr_override()
 
 
@@ -178,7 +177,7 @@ class BotOne:
 		"""
 
 		print("Bot 3: Mean reversion and surplus")
-		print("---------------------------")
+		print("---------------------------------")
 		price = 0
 		share = 0
 		score = 0
@@ -265,6 +264,34 @@ class BotOne:
 		else:
 			print("No translation should proceed. \n")
 
+	def evaluator_crazy_bot(self, price_info, time_stamp, ordered_book, share_lower_limit=50, share_upper_limit=200, n_std=1, moving_avg_period=30):
+		print("Crazy Bot: Random Trading Behavior")
+		print("----------------------------------")
+
+		trade_or_take = random.choice([0, 1])
+
+		if trade_or_take == 0: #take
+			price, share = random.choice(list(ordered_book.items))
+		elif trade_or_take == 1: #trade
+			moving_std = price_info.rolling(window = moving_avg_period).std().to_list()[time_stamp]
+			current_price = price_info.to_list()[time_stamp]
+			buy_or_sell = random.choice([-1, 1])
+			share = random.randint(share_lower_limit, share_upper_limit) * buy_or_sell
+			if buy_or_sell == 1: #sell
+				price = current_price + n_std * moving_std
+			elif buy_or_sell == -1: #buy
+				price = current_price - n_std * moving_std
+
+		if share < 0:
+			print(f"Crazy Bot buys at ${price} for {abs(share)} shares. \n")
+			return price, share
+		elif share > 0:
+			print(f"Crazy Bot sells at ${price} for {share} shares. \n")
+			return price, share
+		else:
+			print("No translation should proceed. \n")
+
+
 price_data = pdr.get_data_yahoo("AAPL", "2015-3-9", "2017-1-1")
 bot = BotOne()
 
@@ -272,7 +299,7 @@ bot = BotOne()
 time_stamp = 287
 current_price = price_data['Adj Close'].to_list()[time_stamp]
 ordered_book = OrderedDict(((int(current_price)+5, 10), (int(current_price)+4, 20), (int(current_price)+3, 30), (int(current_price)+2, 40), (int(current_price)+1, 50), (int(current_price)-1, -50), (int(current_price)-2, -40), (int(current_price)-3, -30), (int(current_price)-4, -20), (int(current_price)-5, -10)))
-result = bot.evaluator_ma_surplus(price_data['Adj Close'], time_stamp, ordered_book)
+result = bot.evaluator_ma_surplus(price_data['Adj Close'], time_stamp, ordered_book, st_moving_avg_period=15, lt_moving_avg_period=30)
 
 ###Bot Two
 time_stamp = 47
@@ -291,6 +318,12 @@ time_stamp = 78
 current_price = price_data['Adj Close'].to_list()[time_stamp]
 ordered_book = OrderedDict(((int(current_price)+5, 10), (int(current_price)+4, 20), (int(current_price)+3, 30), (int(current_price)+2, 40), (int(current_price)+1, 50), (int(current_price)-1, -50), (int(current_price)-2, -40), (int(current_price)-3, -30), (int(current_price)-4, -20), (int(current_price)-5, -10)))
 result = bot.evaluator_donchian_breakout_surplus(price_data['Adj Close'], time_stamp, ordered_book, 30)
+
+###Crazy Bot
+time_stamp = 100
+current_price = price_data['Adj Close'].to_list()[time_stamp]
+ordered_book = OrderedDict(((int(current_price)+5, 10), (int(current_price)+4, 20), (int(current_price)+3, 30), (int(current_price)+2, 40), (int(current_price)+1, 50), (int(current_price)-1, -50), (int(current_price)-2, -40), (int(current_price)-3, -30), (int(current_price)-4, -20), (int(current_price)-5, -10)))
+result = bot.evaluator_crazy_bot(price_data['Adj Close'], time_stamp, ordered_book, share_lower_limit=50, share_upper_limit=200, n_std=1, moving_avg_period=30)
 
 #Graphing:
 # st_moving_avg = price_info.rolling(window=15).mean().to_list()

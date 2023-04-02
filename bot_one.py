@@ -68,7 +68,6 @@ class BotOne:
 				print(current_price, moving_low, moving_high)
 				return 0
 
-
 	def evaluator_ma_surplus(self, price_info, time_stamp, ordered_book, st_moving_avg_period=15, lt_moving_avg_period=30):
 		"""
 			Rule1 [Moving Average] -> direction:
@@ -79,41 +78,43 @@ class BotOne:
 				Sell: lowest buy order, return -1, -0.8, -0.6, -0.4, -0.2
 		"""
 		
-		print("Bot 1: MA and surplus")
-		print("---------------------")
-		price = 0
-		share = 0
-		score = 0
+		# print("Bot 1: MA and surplus")
+		# print("---------------------")
+		price = price_info[time_stamp]
+		share = 50
+		# score = 0
 		coefficient = self.stg_ma(price_info, time_stamp, st_moving_avg_period, lt_moving_avg_period)
 		if coefficient == -1:
-			for price_tmp in ordered_book:
-				if ordered_book[price_tmp] < 0:
-					index = list(ordered_book.keys()).index(price_tmp)
-					score_tmp = self.stg_surplus(index) * coefficient
-					if abs(score_tmp) > score:
-						score = score_tmp
-						share = ordered_book[price_tmp]
-						price = price_tmp
+			print(f"At time {time_stamp}, Bot MA buys at ${round(price, 2)} for {abs(share)} shares. \n")
+			# for price_tmp in ordered_book:
+			# 	if ordered_book[price_tmp] < 0:
+			# 		index = list(ordered_book.keys()).index(price_tmp)
+			# 		score_tmp = self.stg_surplus(index) * coefficient
+			# 		if abs(score_tmp) > score:
+			# 			score = score_tmp
+			# 			share = ordered_book[price_tmp]
+			# 			price = price_tmp
 		elif coefficient == 1:
-			for price_tmp in ordered_book:
-				if ordered_book[price_tmp] > 0:
-					price_list = list(ordered_book.keys())
-					price_list.reverse()
-					index = price_list.index(price_tmp)
-					score_tmp = self.stg_surplus(index) * coefficient
-					if abs(score_tmp) > score:
-						score = abs(score_tmp)
-						share = ordered_book[price_tmp]
-						price = price_tmp
+			print(f"At time {time_stamp}, Bot MA sells at ${round(price, 2)} for {abs(share)} shares. \n")
+			# for price_tmp in ordered_book:
+			# 	if ordered_book[price_tmp] > 0:
+			# 		price_list = list(ordered_book.keys())
+			# 		price_list.reverse()
+			# 		index = price_list.index(price_tmp)
+			# 		score_tmp = self.stg_surplus(index) * coefficient
+			# 		if abs(score_tmp) > score:
+			# 			score = abs(score_tmp)
+			# 			share = ordered_book[price_tmp]
+			# 			price = price_tmp
 		
-		if score < 0:
-			print(f"Highest absolute score is {abs(score)}. Bot buys at ${price} for {abs(share)} shares. \n")
-			return price, share, score
-		elif score > 0:
-			print(f"Highest score is {score}. Bot sells at ${price} for {share} shares. \n")
-			return price, share, score
-		else:
-			return "No translation should proceed. \n"
+		# if score < 0:
+		# 	print(f"Highest absolute score is {abs(score)}. Bot buys at ${price} for {abs(share)} shares. \n")
+		# 	return price, share, score
+		# elif score > 0:
+		# 	print(f"Highest score is {score}. Bot sells at ${price} for {share} shares. \n")
+		# 	return price, share, score
+		# else:
+		# 	return "No translation should proceed. \n"
 
 	def evaluator_momentum_surplus(self, price_info, volume_info, time_stamp, ordered_book, moving_avg_period=30):
 		"""
@@ -292,44 +293,44 @@ class BotOne:
 			print("No translation should proceed. \n")
 
 
-price_data = pdr.get_data_yahoo("AAPL", "2015-3-9", "2017-1-1")
-bot = BotOne()
+# price_data = pdr.get_data_yahoo("AAPL", "2015-3-9", "2017-1-1")
+# bot = BotOne()
 
-###Bot One
-time_stamp = 287
-current_price = price_data['Adj Close'].to_list()[time_stamp]
-ordered_book = OrderedDict(((int(current_price)+5, 10), (int(current_price)+4, 20), (int(current_price)+3, 30), (int(current_price)+2, 40), (int(current_price)+1, 50), (int(current_price)-1, -50), (int(current_price)-2, -40), (int(current_price)-3, -30), (int(current_price)-4, -20), (int(current_price)-5, -10)))
-result = bot.evaluator_ma_surplus(price_data['Adj Close'], time_stamp, ordered_book, st_moving_avg_period=15, lt_moving_avg_period=30)
+# ###Bot One
+# time_stamp = 287
+# current_price = price_data['Adj Close'].to_list()[time_stamp]
+# ordered_book = OrderedDict(((int(current_price)+5, 10), (int(current_price)+4, 20), (int(current_price)+3, 30), (int(current_price)+2, 40), (int(current_price)+1, 50), (int(current_price)-1, -50), (int(current_price)-2, -40), (int(current_price)-3, -30), (int(current_price)-4, -20), (int(current_price)-5, -10)))
+# result = bot.evaluator_ma_surplus(price_data['Adj Close'], time_stamp, ordered_book, st_moving_avg_period=15, lt_moving_avg_period=30)
 
-###Bot Two
-time_stamp = 47
-current_price = price_data['Adj Close'].to_list()[time_stamp]
-ordered_book = OrderedDict(((int(current_price)+5, 10), (int(current_price)+4, 20), (int(current_price)+3, 30), (int(current_price)+2, 40), (int(current_price)+1, 50), (int(current_price)-1, -50), (int(current_price)-2, -40), (int(current_price)-3, -30), (int(current_price)-4, -20), (int(current_price)-5, -10)))
-result = bot.evaluator_momentum_surplus(price_data['Adj Close'], price_data['Volume'], time_stamp, ordered_book, moving_avg_period=30)
+# ###Bot Two
+# time_stamp = 47
+# current_price = price_data['Adj Close'].to_list()[time_stamp]
+# ordered_book = OrderedDict(((int(current_price)+5, 10), (int(current_price)+4, 20), (int(current_price)+3, 30), (int(current_price)+2, 40), (int(current_price)+1, 50), (int(current_price)-1, -50), (int(current_price)-2, -40), (int(current_price)-3, -30), (int(current_price)-4, -20), (int(current_price)-5, -10)))
+# result = bot.evaluator_momentum_surplus(price_data['Adj Close'], price_data['Volume'], time_stamp, ordered_book, moving_avg_period=30)
 
-###Bot Three
-time_stamp = 31
-current_price = price_data['Adj Close'].to_list()[time_stamp]
-ordered_book = OrderedDict(((int(current_price)+5, 10), (int(current_price)+4, 20), (int(current_price)+3, 30), (int(current_price)+2, 40), (int(current_price)+1, 50), (int(current_price)-1, -50), (int(current_price)-2, -40), (int(current_price)-3, -30), (int(current_price)-4, -20), (int(current_price)-5, -10)))
-result = bot.evaluator_mean_reversion_surplus(price_data['Adj Close'], time_stamp, ordered_book, moving_avg_period=30, n_std=1)
+# ###Bot Three
+# time_stamp = 31
+# current_price = price_data['Adj Close'].to_list()[time_stamp]
+# ordered_book = OrderedDict(((int(current_price)+5, 10), (int(current_price)+4, 20), (int(current_price)+3, 30), (int(current_price)+2, 40), (int(current_price)+1, 50), (int(current_price)-1, -50), (int(current_price)-2, -40), (int(current_price)-3, -30), (int(current_price)-4, -20), (int(current_price)-5, -10)))
+# result = bot.evaluator_mean_reversion_surplus(price_data['Adj Close'], time_stamp, ordered_book, moving_avg_period=30, n_std=1)
 
-###Bot Four
-time_stamp = 78
-current_price = price_data['Adj Close'].to_list()[time_stamp]
-ordered_book = OrderedDict(((int(current_price)+5, 10), (int(current_price)+4, 20), (int(current_price)+3, 30), (int(current_price)+2, 40), (int(current_price)+1, 50), (int(current_price)-1, -50), (int(current_price)-2, -40), (int(current_price)-3, -30), (int(current_price)-4, -20), (int(current_price)-5, -10)))
-result = bot.evaluator_donchian_breakout_surplus(price_data['Adj Close'], time_stamp, ordered_book, moving_avg_period=30)
+# ###Bot Four
+# time_stamp = 78
+# current_price = price_data['Adj Close'].to_list()[time_stamp]
+# ordered_book = OrderedDict(((int(current_price)+5, 10), (int(current_price)+4, 20), (int(current_price)+3, 30), (int(current_price)+2, 40), (int(current_price)+1, 50), (int(current_price)-1, -50), (int(current_price)-2, -40), (int(current_price)-3, -30), (int(current_price)-4, -20), (int(current_price)-5, -10)))
+# result = bot.evaluator_donchian_breakout_surplus(price_data['Adj Close'], time_stamp, ordered_book, moving_avg_period=30)
 
-###Crazy Bot
-time_stamp = 100
-current_price = price_data['Adj Close'].to_list()[time_stamp]
-ordered_book = OrderedDict(((int(current_price)+5, 10), (int(current_price)+4, 20), (int(current_price)+3, 30), (int(current_price)+2, 40), (int(current_price)+1, 50), (int(current_price)-1, -50), (int(current_price)-2, -40), (int(current_price)-3, -30), (int(current_price)-4, -20), (int(current_price)-5, -10)))
-result = bot.evaluator_crazy_bot(price_data['Adj Close'], time_stamp, ordered_book, share_lower_limit=50, share_upper_limit=200, n_std=1, moving_avg_period=30)
+# ###Crazy Bot
+# time_stamp = 100
+# current_price = price_data['Adj Close'].to_list()[time_stamp]
+# ordered_book = OrderedDict(((int(current_price)+5, 10), (int(current_price)+4, 20), (int(current_price)+3, 30), (int(current_price)+2, 40), (int(current_price)+1, 50), (int(current_price)-1, -50), (int(current_price)-2, -40), (int(current_price)-3, -30), (int(current_price)-4, -20), (int(current_price)-5, -10)))
+# result = bot.evaluator_crazy_bot(price_data['Adj Close'], time_stamp, ordered_book, share_lower_limit=50, share_upper_limit=200, n_std=1, moving_avg_period=30)
 
-#Graphing:
-# st_moving_avg = price_info.rolling(window=15).mean().to_list()
-# lt_moving_avg = price_info.rolling(window=30).mean().to_list()
-# import matplotlib.pyplot as plt
-# plt.plot(price_info.to_list())
-# plt.plot(st_moving_avg)
-# plt.plot(lt_moving_avg)
-# plt.show()
+# #Graphing:
+# # st_moving_avg = price_info.rolling(window=15).mean().to_list()
+# # lt_moving_avg = price_info.rolling(window=30).mean().to_list()
+# # import matplotlib.pyplot as plt
+# # plt.plot(price_info.to_list())
+# # plt.plot(st_moving_avg)
+# # plt.plot(lt_moving_avg)
+# # plt.show()

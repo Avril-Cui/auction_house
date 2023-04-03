@@ -77,45 +77,8 @@ class BotOne:
 				Buy: highest sell order, return 1, 0.8, 0.6, 0.4, 0.2
 				Sell: lowest buy order, return -1, -0.8, -0.6, -0.4, -0.2
 		"""
-		
-		# print("Bot 1: MA and surplus")
-		# print("---------------------")
-		price = price_info[time_stamp]
-		share = 50
-		# score = 0
 		coefficient = self.stg_ma(price_info, time_stamp, st_moving_avg_period, lt_moving_avg_period)
 		return coefficient
-		# if coefficient == -1:
-		# 	print(f"At time {time_stamp}, Bot MA buys at ${round(price, 2)} for {abs(share)} shares. \n")
-		# 	# for price_tmp in ordered_book:
-		# 	# 	if ordered_book[price_tmp] < 0:
-		# 	# 		index = list(ordered_book.keys()).index(price_tmp)
-		# 	# 		score_tmp = self.stg_surplus(index) * coefficient
-		# 	# 		if abs(score_tmp) > score:
-		# 	# 			score = score_tmp
-		# 	# 			share = ordered_book[price_tmp]
-		# 	# 			price = price_tmp
-		# elif coefficient == 1:
-		# 	print(f"At time {time_stamp}, Bot MA sells at ${round(price, 2)} for {abs(share)} shares. \n")
-		# 	# for price_tmp in ordered_book:
-		# 	# 	if ordered_book[price_tmp] > 0:
-		# 	# 		price_list = list(ordered_book.keys())
-		# 	# 		price_list.reverse()
-		# 	# 		index = price_list.index(price_tmp)
-		# 	# 		score_tmp = self.stg_surplus(index) * coefficient
-		# 	# 		if abs(score_tmp) > score:
-		# 	# 			score = abs(score_tmp)
-		# 	# 			share = ordered_book[price_tmp]
-		# 	# 			price = price_tmp
-		
-		# # if score < 0:
-		# # 	print(f"Highest absolute score is {abs(score)}. Bot buys at ${price} for {abs(share)} shares. \n")
-		# # 	return price, share, score
-		# # elif score > 0:
-		# # 	print(f"Highest score is {score}. Bot sells at ${price} for {share} shares. \n")
-		# # 	return price, share, score
-		# # else:
-		# # 	return "No translation should proceed. \n"
 
 	def evaluator_momentum_surplus(self, price_info, volume_info, time_stamp, ordered_book, moving_avg_period=30):
 		"""
@@ -128,45 +91,8 @@ class BotOne:
 				Buy: highest sell order, return 1, 0.8, 0.6, 0.4, 0.2
 				Sell: lowest buy order, return -1, -0.8, -0.6, -0.4, -0.2
 		"""
-
-		print("Bot 2: Momentum and surplus")
-		print("---------------------------")
-		price = 0
-		share = 0
-		score = 0
 		coefficient = self.stg_momentum(price_info, volume_info, moving_avg_period, time_stamp)
-		
-		if coefficient == -1:
-			for price_tmp in ordered_book:
-				if ordered_book[price_tmp] < 0:
-					index = list(ordered_book.keys()).index(price_tmp)
-					score_tmp = self.stg_surplus(index) * coefficient
-					if abs(score_tmp) > score:
-						score = score_tmp
-						share = ordered_book[price_tmp]
-						price = price_tmp
-		elif coefficient == 1:
-			for price_tmp in ordered_book:
-				if ordered_book[price_tmp] > 0:
-					price_list = list(ordered_book.keys())
-					price_list.reverse()
-					index = price_list.index(price_tmp)
-					score_tmp = self.stg_surplus(index) * coefficient
-					if abs(score_tmp) > score:
-						score = abs(score_tmp)
-						share = ordered_book[price_tmp]
-						price = price_tmp
-		else:
-			score = 0
-		
-		if score < 0:
-			print(f"Highest absolute score is {abs(score)}. Bot buys at ${price} for {abs(share)} shares. \n")
-			return price, share, score
-		elif score > 0:
-			print(f"Highest score is {score}. Bot sells at ${price} for {share} shares. \n")
-			return price, share, score
-		else:
-			print("No translation should proceed. \n")
+		return coefficient
 
 	def evaluator_mean_reversion_surplus(self, price_info, time_stamp, ordered_book, moving_avg_period=30, n_std=1):
 		"""
@@ -177,45 +103,8 @@ class BotOne:
 				Buy: highest sell order, return 1, 0.8, 0.6, 0.4, 0.2
 				Sell: lowest buy order, return -1, -0.8, -0.6, -0.4, -0.2
 		"""
-
-		print("Bot 3: Mean reversion and surplus")
-		print("---------------------------------")
-		price = 0
-		share = 0
-		score = 0
 		coefficient = self.stg_mean_reversion(price_info, moving_avg_period, time_stamp, n_std)
-		
-		if coefficient == -1:
-			for price_tmp in ordered_book:
-				if ordered_book[price_tmp] < 0:
-					index = list(ordered_book.keys()).index(price_tmp)
-					score_tmp = self.stg_surplus(index) * coefficient
-					if abs(score_tmp) > score:
-						score = score_tmp
-						share = ordered_book[price_tmp]
-						price = price_tmp
-		elif coefficient == 1:
-			for price_tmp in ordered_book:
-				if ordered_book[price_tmp] > 0:
-					price_list = list(ordered_book.keys())
-					price_list.reverse()
-					index = price_list.index(price_tmp)
-					score_tmp = self.stg_surplus(index) * coefficient
-					if abs(score_tmp) > score:
-						score = abs(score_tmp)
-						share = ordered_book[price_tmp]
-						price = price_tmp
-		else:
-			score = 0
-		
-		if score < 0:
-			print(f"Highest absolute score is {abs(score)}. Bot buys at ${price} for {abs(share)} shares. \n")
-			return price, share, score
-		elif score > 0:
-			print(f"Highest score is {score}. Bot sells at ${price} for {share} shares. \n")
-			return price, share, score
-		else:
-			print("No translation should proceed. \n")
+		return coefficient
 
 	def evaluator_donchian_breakout_surplus(self, price_info, time_stamp, ordered_book, moving_avg_period=30):
 		"""
@@ -226,45 +115,8 @@ class BotOne:
 				Buy: highest sell order, return 1, 0.8, 0.6, 0.4, 0.2
 				Sell: lowest buy order, return -1, -0.8, -0.6, -0.4, -0.2
 		"""
-
-		print("Bot 4: Donchian breakout and surplus")
-		print("------------------------------------")
-		price = 0
-		share = 0
-		score = 0
 		coefficient = self.stg_donchian_breakout(price_info, moving_avg_period, time_stamp)
-		
-		if coefficient == -1:
-			for price_tmp in ordered_book:
-				if ordered_book[price_tmp] < 0:
-					index = list(ordered_book.keys()).index(price_tmp)
-					score_tmp = self.stg_surplus(index) * coefficient
-					if abs(score_tmp) > score:
-						score = score_tmp
-						share = ordered_book[price_tmp]
-						price = price_tmp
-		elif coefficient == 1:
-			for price_tmp in ordered_book:
-				if ordered_book[price_tmp] > 0:
-					price_list = list(ordered_book.keys())
-					price_list.reverse()
-					index = price_list.index(price_tmp)
-					score_tmp = self.stg_surplus(index) * coefficient
-					if abs(score_tmp) > score:
-						score = abs(score_tmp)
-						share = ordered_book[price_tmp]
-						price = price_tmp
-		else:
-			score = 0
-		
-		if score < 0:
-			print(f"Highest absolute score is {abs(score)}. Bot buys at ${price} for {abs(share)} shares. \n")
-			return price, share, score
-		elif score > 0:
-			print(f"Highest score is {score}. Bot sells at ${price} for {share} shares. \n")
-			return price, share, score
-		else:
-			print("No translation should proceed. \n")
+		return coefficient
 
 	def evaluator_crazy_bot(self, price_info, time_stamp, ordered_book, share_lower_limit=50, share_upper_limit=200, n_std=1, moving_avg_period=30):
 		print("Crazy Bot: Random Trading Behavior")

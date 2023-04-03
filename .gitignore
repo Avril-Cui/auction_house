@@ -3,6 +3,7 @@
 ./client/.history/*
 .vscode/*
 *__pycache__/*
+*history*
 */__pycache__/*
 */*/__pycache__/*
 node_modules/*

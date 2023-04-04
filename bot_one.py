@@ -292,10 +292,10 @@ price_data = pdr.get_data_yahoo("AAPL", "2015-3-9", "2017-1-1")
 bot = BotOne()
 
 ###Bot One
-time_stamp = 287
-current_price = price_data['Adj Close'].to_list()[time_stamp]
-ordered_book = OrderedDict(((int(current_price)+5, 10), (int(current_price)+4, 20), (int(current_price)+3, 30), (int(current_price)+2, 40), (int(current_price)+1, 50), (int(current_price)-1, -50), (int(current_price)-2, -40), (int(current_price)-3, -30), (int(current_price)-4, -20), (int(current_price)-5, -10)))
-result = bot.evaluator_ma_surplus(price_data['Adj Close'], time_stamp, ordered_book, st_moving_avg_period=15, lt_moving_avg_period=30)
+# time_stamp = 287
+# current_price = price_data['Adj Close'].to_list()[time_stamp]
+# ordered_book = OrderedDict(((int(current_price)+5, 10), (int(current_price)+4, 20), (int(current_price)+3, 30), (int(current_price)+2, 40), (int(current_price)+1, 50), (int(current_price)-1, -50), (int(current_price)-2, -40), (int(current_price)-3, -30), (int(current_price)-4, -20), (int(current_price)-5, -10)))
+# result = bot.evaluator_ma_surplus(price_data['Adj Close'], time_stamp, ordered_book, st_moving_avg_period=15, lt_moving_avg_period=30)
 
 ###Bot Two
 # time_stamp = 47

@@ -4,10 +4,8 @@ from dotenv import load_dotenv
 load_dotenv()
 import requests
 import json
-import time
 import pandas as pd
 from collections import OrderedDict
-# import random
 from pandas_datareader import data as pdr
 import yfinance as yf
 yf.pdr_override()
@@ -34,9 +32,14 @@ def get_price_from_database(company_id):
 
 index_price = get_price_from_database("index")[60*60*10:60*60*11]
 index_price = [float(i) for i in index_price]
+index_price_df = pd.DataFrame(index_price, columns=["index_price"])["index_price"]  
 
 from bot_one import BotOne
 bot = BotOne()
+
+def get_order_book(current_price):
+    order_book = OrderedDict(((int(current_price)+5, 10), (int(current_price)+4, 20), (int(current_price)+3, 30), (int(current_price)+2, 40), (int(current_price)+1, 50), (int(current_price)-1, -50), (int(current_price)-2, -40), (int(current_price)-3, -30), (int(current_price)-4, -20), (int(current_price)-5, -10)))
+    return order_book
 
 def register_bot(register_url, bot_name):
     payload = json.dumps({
@@ -86,9 +89,10 @@ def trade_stock(bot_name, bot_uid, price, share, comp_name, url="http://127.0.0.
         else:
             print(f"Sell order made successfully by {bot_name} at {price} for {abs(share)} shares.")
 
-price_data = pdr.get_data_yahoo("AAPL", "2015-3-9", "2017-1-1")
-time_stamp = 287
-current_price = price_data['Adj Close'].to_list()[time_stamp]
-ordered_book = OrderedDict(((int(current_price)+5, 10), (int(current_price)+4, 20), (int(current_price)+3, 30), (int(current_price)+2, 40), (int(current_price)+1, 50), (int(current_price)-1, -50), (int(current_price)-2, -40), (int(current_price)-3, -30), (int(current_price)-4, -20), (int(current_price)-5, -10)))
-price, share, score = bot.evaluator_ma_surplus(price_data['Adj Close'], time_stamp, ordered_book, st_moving_avg_period=15, lt_moving_avg_period=30)
-trade_stock("Moving Average", "iMioxAB0MpNWoPFwIaZY2Y3jr4G3", price, share, "wrkn")
+for index in range(len(index_price)):
+    time_stamp = index
+    current_price = index_price[time_stamp]
+    order_book = get_order_book(current_price)
+    price, share, score = bot.evaluator_ma_surplus(index_price_df, time_stamp, order_book, st_moving_avg_period=15, lt_moving_avg_period=30)
+    trade_stock("Moving Average", "iMioxAB0MpNWoPFwIaZY2Y3jr4G3", price, share, "wrkn")
+    

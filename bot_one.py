@@ -4,10 +4,6 @@ from pandas_datareader import data as pdr
 import yfinance as yf
 yf.pdr_override()
 
-#sell: -1
-#buy: +1
-
-
 class BotOne:
 
 	def __init__(self) -> None:

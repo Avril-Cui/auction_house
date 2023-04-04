@@ -65,7 +65,6 @@ class BotOne:
 			elif current_price > moving_high:
 				return 1
 			else:
-				print(current_price, moving_low, moving_high)
 				return 0
 
 	def evaluator_ma_surplus(self, price_info, time_stamp, ordered_book, st_moving_avg_period=15, lt_moving_avg_period=30):
@@ -137,11 +136,13 @@ class BotOne:
 				price = current_price - n_std * moving_std
 
 		if share < 0:
-			print(f"Crazy Bot buys at ${round(price, 2)} for {abs(share)} shares. \n")
-			return price, share
+			# print(f"Crazy Bot buys at ${round(price, 2)} for {abs(share)} shares. \n")
+			# return price, share
+			return -1
 		elif share > 0:
-			print(f"Crazy Bot sells at ${round(price, 2)} for {share} shares. \n")
-			return price, share
+			# print(f"Crazy Bot sells at ${round(price, 2)} for {share} shares. \n")
+			# return price, share
+			return 1
 		else:
 			print("No translation should proceed. \n")
 

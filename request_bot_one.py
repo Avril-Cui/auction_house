@@ -7,7 +7,7 @@ import json
 import time
 import pandas as pd
 from collections import OrderedDict
-import random
+# import random
 from pandas_datareader import data as pdr
 import yfinance as yf
 yf.pdr_override()
@@ -86,16 +86,9 @@ def trade_stock(bot_name, bot_uid, price, share, comp_name, url="http://127.0.0.
         else:
             print(f"Sell order made successfully by {bot_name} at {price} for {abs(share)} shares.")
 
-# register_bot("http://127.0.0.1:5000/register", "ma_bot")
-
 price_data = pdr.get_data_yahoo("AAPL", "2015-3-9", "2017-1-1")
 time_stamp = 287
 current_price = price_data['Adj Close'].to_list()[time_stamp]
 ordered_book = OrderedDict(((int(current_price)+5, 10), (int(current_price)+4, 20), (int(current_price)+3, 30), (int(current_price)+2, 40), (int(current_price)+1, 50), (int(current_price)-1, -50), (int(current_price)-2, -40), (int(current_price)-3, -30), (int(current_price)-4, -20), (int(current_price)-5, -10)))
 price, share, score = bot.evaluator_ma_surplus(price_data['Adj Close'], time_stamp, ordered_book, st_moving_avg_period=15, lt_moving_avg_period=30)
 trade_stock("Moving Average", "iMioxAB0MpNWoPFwIaZY2Y3jr4G3", price, share, "wrkn")
-
-# bot_two = BotTwo("ast")
-# for i in range(10):
-#     bot_two.trade_stock()
-#     time.sleep(1)

@@ -1,3 +1,4 @@
+from cgi import test
 import random
 import math
 import datetime
@@ -7,7 +8,6 @@ from pandas_datareader import data as pdr
 import yfinance as yf
 import operator
 
-from bot_three import euclideanDistance, getAccuracy
 yf.pdr_override()
 
 # split the data into a trainingdataset and testdataset in ratio of 67/33
@@ -54,16 +54,18 @@ def get_response(neighbors):
             class_votes[response] += 1
         else:
             class_votes[response] = 1
-    sorted_votes = sorted(class_votes.iteritems(), key=operator.itemgetter(1), reverse=True)
+    sorted_votes = sorted(class_votes.items(), key=operator.itemgetter(1), reverse=True)
     return sorted_votes[0][0]
+
+def RMSD(X, Y):
+    return math.sqrt(pow(Y - X, 2))
 
 def get_accuracy(test_set, predictions):
     correct = 0
     for i in range(len(test_set)):
-        if test_set[i][-1] == predictions[i]:
-            correct += 1
-        
-        return (correct/float(len(test_set))) * 100.00
+        if RMSD(test_set.iloc[i][-1], predictions[i]) < 1:
+            correct += 1  
+    return (correct/float(len(test_set))) * 100.00
 
 
 def predict_and_get_accuracy(test_set, training_set, k):
@@ -73,10 +75,12 @@ def predict_and_get_accuracy(test_set, training_set, k):
         result = get_response(neighbors)
         predictions.append(result)
     
-    accuracy = getAccuracy(test_set, predictions)
+    accuracy = get_accuracy(test_set, predictions)
+    print('Accuracy: ' + repr(accuracy) + '%')
 
 def predict_for(k, comp_name, price_data, split):
     training_set, test_set = prepare_data(price_data, split)
+    totalCount = 0
 
     print("Predicting for ", comp_name)
     print("Train: " + repr(len(training_set)))
@@ -86,3 +90,8 @@ def predict_for(k, comp_name, price_data, split):
 
     predict_and_get_accuracy(test_set, training_set, k)
 
+data = pdr.get_data_yahoo("AAPL", "2015-1-1", "2017-1-1")
+price_data = data[['High', 'Low', "Open", "Adj Close"]]
+split = 0.67
+
+predict_for(5, "Apple", price_data, split)

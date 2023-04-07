@@ -37,7 +37,7 @@ class BotThree:
     
     def prepare_signal(self, price_data):
         signal = [0]
-        n_std = 0.75
+        n_std = 1
         moving_avg = price_data.rolling(window = 15).mean().to_list()
         moving_std = price_data.rolling(window = 15).std().to_list()
 
@@ -67,8 +67,7 @@ class BotThree:
         return coefficient
 
 bot = BotThree() 
-price_data = pdr.get_data_yahoo("AAPL", "2021-1-1", "2021-9-1")
-bot.prepared_data(price_data, 12)
+price_data = pdr.get_data_yahoo("META", "2020-1-1", "2021-1-1")
 
 z = 1
 PL = 0
@@ -83,7 +82,7 @@ print("End Price: ", round(end_price, 3))
 for index in range(30, len(price_data)):
     time_stamp = index
     current_price = price_data["Adj Close"].iloc[time_stamp]
-    result = bot.prepared_data(price_data[:index], 12)
+    result = bot.prepared_data(price_data[:index], 8)
 
     share = 50
     if result == -1:
@@ -101,6 +100,6 @@ for index in range(30, len(price_data)):
             print("Total Return %", pct_return, "\n")
             z = z+1
 
-normal_return = ":.2%".format((end_price-start_price)/start_price)
+normal_return = round(((end_price-start_price)/start_price),4)*100
 print(f"Total return for kNN strategy throughout the process is {pct_return}.")
-print(f"Return of the company from beginning to end is {normal_return}")
+print(f"Return of the company from beginning to end is {normal_return} %")

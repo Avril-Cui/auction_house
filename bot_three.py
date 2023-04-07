@@ -12,6 +12,24 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score
 import matplotlib.pyplot as plt
 
+import psycopg2
+conn = psycopg2.connect(
+    host="localhost",
+    database="aspectdatabase",
+    user="postgres",
+    password="Xiaokeai0717"
+)
+cur = conn.cursor()
+
+def get_price_from_database(company_id):
+	cur.execute(f"""
+          SELECT price_list from test_prices WHERE company_id='{company_id}';
+    """)
+	price = list(cur.fetchone()[0])
+	return price
+
+index_price = get_price_from_database("index")[60*60*11:60*60*11+60*60]
+index_price = [float(i) for i in index_price]
 
 class BotThree:
     """
@@ -37,7 +55,7 @@ class BotThree:
     
     def prepare_signal(self, price_data):
         signal = [0]
-        n_std = 1
+        n_std = 1.5
         moving_avg = price_data.rolling(window = 15).mean().to_list()
         moving_std = price_data.rolling(window = 15).std().to_list()
 
@@ -67,7 +85,7 @@ class BotThree:
         return coefficient
 
 bot = BotThree() 
-price_data = pdr.get_data_yahoo("META", "2020-1-1", "2021-1-1")
+price_data = pd.DataFrame(index_price, columns=["Adj Close"])
 
 z = 1
 PL = 0
@@ -79,6 +97,7 @@ pct_return = ":.2%".format(Return)
 print("Start Price: ", round(start_price, 3))
 print("End Price: ", round(end_price, 3))
 
+print(len(price_data))
 for index in range(30, len(price_data)):
     time_stamp = index
     current_price = price_data["Adj Close"].iloc[time_stamp]
@@ -87,12 +106,12 @@ for index in range(30, len(price_data)):
     share = 50
     if result == -1:
         if z == 1:
-            print(f"At time {time_stamp}, Bot MA buys at ${round(current_price, 2)} for {abs(share)} shares. \n")
+            print(f"At time {time_stamp}, Bot kNN buys at ${round(current_price, 2)} for {abs(share)} shares. \n")
             PL = PL - current_price
             z = z-1
     elif result == 1:
         if z ==  0:
-            print(f"At time {time_stamp}, Bot MA sells at ${round(current_price, 2)} for {abs(share)} shares. \n")
+            print(f"At time {time_stamp}, Bot kNN sells at ${round(current_price, 2)} for {abs(share)} shares. \n")
             PL = PL + current_price
             Return = (PL / start_price)
             pct_return = "{:.2%}".format(Return)
@@ -103,3 +122,57 @@ for index in range(30, len(price_data)):
 normal_return = round(((end_price-start_price)/start_price),4)*100
 print(f"Total return for kNN strategy throughout the process is {pct_return}.")
 print(f"Return of the company from beginning to end is {normal_return} %")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# price_data = pdr.get_data_yahoo("META", "2020-1-1", "2021-1-1")
+
+# z = 1
+# PL = 0
+# start_price = price_data["Adj Close"].iloc[0]
+# end_price = price_data["Adj Close"].iloc[-1]
+# Return = (PL/start_price)
+# pct_return = ":.2%".format(Return)
+
+# print("Start Price: ", round(start_price, 3))
+# print("End Price: ", round(end_price, 3))
+
+# for index in range(30, len(price_data)):
+#     time_stamp = index
+#     current_price = price_data["Adj Close"].iloc[time_stamp]
+#     result = bot.prepared_data(price_data[:index], 8)
+
+#     share = 50
+#     if result == -1:
+#         if z == 1:
+#             print(f"At time {time_stamp}, Bot MA buys at ${round(current_price, 2)} for {abs(share)} shares. \n")
+#             PL = PL - current_price
+#             z = z-1
+#     elif result == 1:
+#         if z ==  0:
+#             print(f"At time {time_stamp}, Bot MA sells at ${round(current_price, 2)} for {abs(share)} shares. \n")
+#             PL = PL + current_price
+#             Return = (PL / start_price)
+#             pct_return = "{:.2%}".format(Return)
+#             print("Total Profit/Loss $", round(PL, 2))
+#             print("Total Return %", pct_return, "\n")
+#             z = z+1
+
+# normal_return = round(((end_price-start_price)/start_price),4)*100
+# print(f"Total return for kNN strategy throughout the process is {pct_return}.")
+# print(f"Return of the company from beginning to end is {normal_return} %")

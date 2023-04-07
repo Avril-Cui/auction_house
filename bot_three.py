@@ -1,5 +1,7 @@
 from collections import OrderedDict
+from tracemalloc import start
 import pandas as pd
+pd.options.mode.chained_assignment = None
 import numpy as np
 import random
 from pandas_datareader import data as pdr
@@ -35,7 +37,7 @@ class BotThree:
     
     def prepare_signal(self, price_data):
         signal = [0]
-        n_std = 1
+        n_std = 0.75
         moving_avg = price_data.rolling(window = 15).mean().to_list()
         moving_std = price_data.rolling(window = 15).std().to_list()
 
@@ -48,17 +50,57 @@ class BotThree:
                 signal.append(-1)
             else:
                 signal.append(0)
+        return signal
 
     def prepared_data(self, price_data, k):
-        X_train = price_data.diff()
-        signal = self.prepare_signal(price_data)
+        price_data["diff"] = price_data["Adj Close"].diff()
+        price_data = price_data.dropna()
+        X = price_data[["diff"]]
+        X_train = X[:-1]
+        signal = self.prepare_signal(price_data["Adj Close"][:-1])
         Y_train = np.asarray(signal, dtype=int)
         knn = KNeighborsClassifier(n_neighbors=k)
         knn.fit(X_train, Y_train)
-        predicted_signal = knn.predict(price_data)
+        predicted_signal = knn.predict(X)
 
-        return predicted_signal
+        coefficient = predicted_signal[-1]
+        return coefficient
 
 bot = BotThree() 
-price_data = pdr.get_data_yahoo("NVDA", "2021-1-1", "2023-1-1")
-bot.prepared_data(price_data["Adj Close"], 10)
+price_data = pdr.get_data_yahoo("AAPL", "2021-1-1", "2021-9-1")
+bot.prepared_data(price_data, 12)
+
+z = 1
+PL = 0
+start_price = price_data["Adj Close"].iloc[0]
+end_price = price_data["Adj Close"].iloc[-1]
+Return = (PL/start_price)
+pct_return = ":.2%".format(Return)
+
+print("Start Price: ", round(start_price, 3))
+print("End Price: ", round(end_price, 3))
+
+for index in range(30, len(price_data)):
+    time_stamp = index
+    current_price = price_data["Adj Close"].iloc[time_stamp]
+    result = bot.prepared_data(price_data[:index], 12)
+
+    share = 50
+    if result == -1:
+        if z == 1:
+            print(f"At time {time_stamp}, Bot MA buys at ${round(current_price, 2)} for {abs(share)} shares. \n")
+            PL = PL - current_price
+            z = z-1
+    elif result == 1:
+        if z ==  0:
+            print(f"At time {time_stamp}, Bot MA sells at ${round(current_price, 2)} for {abs(share)} shares. \n")
+            PL = PL + current_price
+            Return = (PL / start_price)
+            pct_return = "{:.2%}".format(Return)
+            print("Total Profit/Loss $", round(PL, 2))
+            print("Total Return %", pct_return, "\n")
+            z = z+1
+
+normal_return = ":.2%".format((end_price-start_price)/start_price)
+print(f"Total return for kNN strategy throughout the process is {pct_return}.")
+print(f"Return of the company from beginning to end is {normal_return}")

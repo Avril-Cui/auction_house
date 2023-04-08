@@ -12,7 +12,7 @@ strategy that either mocks a type of investor or implemented a statistical learn
 
 ## Bot Type One
 In Aspect, prices of companies and indices were simulated through stochastic differential equations. The details of the model could be found in https://github.com/Avril-Cui/AspectPython.
-Bot type one are bots that always buy and sells at the model-generated price at a given timestamp t.
+Bot type one are bots that always buy and sell at the model-generated price at a given timestamp t.
 
 ## Bot Type Two
 Bot type two contains bots that follows economic-gaming strategies or commonly-used algorithm/technical trading strategies.

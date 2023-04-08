@@ -10,6 +10,7 @@ yf.pdr_override()
 
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score
+from sklearn.svm import SVC
 import matplotlib.pyplot as plt
 
 import psycopg2
@@ -40,56 +41,60 @@ class BotThree:
 
     def __init__(self) -> None:
         pass
-
-    # def calculate_k_value(self, X_test, Y_test, X_train, Y_train, k_range=20):
-    #     accuracy = []
-    #     for i in range(1, k_range):
-    #         knn = KNeighborsClassifier(n_neighbors=i)
-    #         knn.fit(X_train, Y_train)
-    #         accuracy_train = accuracy_score(Y_train, knn.predict(X_train))
-    #         accuracy_test = accuracy_score(Y_test, knn.predict(X_test))
-    #         print(i, accuracy_train, accuracy_test)
-    #         accuracy.append(abs(accuracy_train - accuracy_test))
-    #     k = accuracy.index(min(accuracy)) + 1
-    #     return k
     
-    def prepare_signal(self, price_data):
-        signal = [0]
-        n_std = 1.5
-        moving_avg = price_data.rolling(window = 15).mean().to_list()
-        moving_std = price_data.rolling(window = 15).std().to_list()
-
-        for index in range(1, len(price_data)):
-            upper_bound = moving_avg[index] + n_std * moving_std[index]
-            lower_bound = moving_avg[index] - n_std * moving_std[index]
-            if price_data.iloc[index] < lower_bound:
-                signal.append(1)
-            elif price_data.iloc[index] > upper_bound:
-                signal.append(-1)
-            else:
-                signal.append(0)
+    def prepare_signal1(self, price_data):
+        signal = np.where(price_data.shift(-1)>price_data,1,-1)
         return signal
-
-    def prepared_data(self, price_data, k):
+    
+    def knn_trainer(self, price_data, k):
         price_data["diff"] = price_data["Adj Close"].diff()
         price_data = price_data.dropna()
         X = price_data[["diff"]]
-        X_train = X[:-1]
-        signal = self.prepare_signal(price_data["Adj Close"][:-1])
-        Y_train = np.asarray(signal, dtype=int)
+        X_train = X
+        Y_train = self.prepare_signal1(price_data["Adj Close"])
         knn = KNeighborsClassifier(n_neighbors=k)
         knn.fit(X_train, Y_train)
+        return knn
+
+    def knn_evaluator(self, knn, current_price, last_price):
+        x_data = pd.DataFrame([current_price-last_price], columns=["diff"])
+        X = x_data[["diff"]]
         predicted_signal = knn.predict(X)
 
         coefficient = predicted_signal[-1]
         return coefficient
+    
+    def svc_trainer(self, price_data):
+        price_data["diff"] = price_data["Adj Close"].diff()
+        price_data = price_data.dropna()
+        X = price_data[["diff"]]
+        X_train = X[:-1]
+        model = SVC()
+        Y_train = self.prepare_signal1(price_data["Adj Close"][:-1])
+        model.fit(X_train, Y_train)
+        return model
+
+    def svc_evaluator(self, model, current_price, last_price):
+        x_data = pd.DataFrame([current_price-last_price], columns=["diff"])
+        X = x_data[["diff"]]
+        predicted_signal = model.predict(X)
+
+        coefficient = predicted_signal[-1]
+        return coefficient
+    
+    # def svc_prepare_signal(self, price_data):
+
+
 
 bot = BotThree() 
-price_data = pd.DataFrame(index_price, columns=["Adj Close"])
+# price_data = pd.DataFrame(index_price, columns=["Adj Close"])
+price_data = pdr.get_data_yahoo("NVDA", "2021-1-1", "2022-1-1")
+split_percentage = 0.5
+split = int(split_percentage*len(price_data))
 
 z = 1
 PL = 0
-start_price = price_data["Adj Close"].iloc[0]
+start_price = price_data["Adj Close"].iloc[split+1]
 end_price = price_data["Adj Close"].iloc[-1]
 Return = (PL/start_price)
 pct_return = ":.2%".format(Return)
@@ -98,20 +103,23 @@ print("Start Price: ", round(start_price, 3))
 print("End Price: ", round(end_price, 3))
 
 print(len(price_data))
-for index in range(30, len(price_data)):
+# knn = bot.knn_trainer(price_data[:336], 8)
+svc = bot.svc_trainer(price_data[:split])
+
+for index in range(split+1, len(price_data)):
     time_stamp = index
     current_price = price_data["Adj Close"].iloc[time_stamp]
-    result = bot.prepared_data(price_data[:index], 8)
-
+    last_price = price_data["Adj Close"].iloc[time_stamp-1]
+    result = bot.svc_evaluator(svc, current_price, last_price)
     share = 50
-    if result == -1:
+    if result == 1:
         if z == 1:
-            print(f"At time {time_stamp}, Bot kNN buys at ${round(current_price, 2)} for {abs(share)} shares. \n")
+            print(f"At time {time_stamp}, Bot SVC buys at ${round(current_price, 2)} for {abs(share)} shares. \n")
             PL = PL - current_price
             z = z-1
-    elif result == 1:
+    elif result == -1:
         if z ==  0:
-            print(f"At time {time_stamp}, Bot kNN sells at ${round(current_price, 2)} for {abs(share)} shares. \n")
+            print(f"At time {time_stamp}, Bot SVC sells at ${round(current_price, 2)} for {abs(share)} shares. \n")
             PL = PL + current_price
             Return = (PL / start_price)
             pct_return = "{:.2%}".format(Return)
@@ -120,59 +128,5 @@ for index in range(30, len(price_data)):
             z = z+1
 
 normal_return = round(((end_price-start_price)/start_price),4)*100
-print(f"Total return for kNN strategy throughout the process is {pct_return}.")
+print(f"Total return for SVC strategy throughout the process is {pct_return}.")
 print(f"Return of the company from beginning to end is {normal_return} %")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# price_data = pdr.get_data_yahoo("META", "2020-1-1", "2021-1-1")
-
-# z = 1
-# PL = 0
-# start_price = price_data["Adj Close"].iloc[0]
-# end_price = price_data["Adj Close"].iloc[-1]
-# Return = (PL/start_price)
-# pct_return = ":.2%".format(Return)
-
-# print("Start Price: ", round(start_price, 3))
-# print("End Price: ", round(end_price, 3))
-
-# for index in range(30, len(price_data)):
-#     time_stamp = index
-#     current_price = price_data["Adj Close"].iloc[time_stamp]
-#     result = bot.prepared_data(price_data[:index], 8)
-
-#     share = 50
-#     if result == -1:
-#         if z == 1:
-#             print(f"At time {time_stamp}, Bot MA buys at ${round(current_price, 2)} for {abs(share)} shares. \n")
-#             PL = PL - current_price
-#             z = z-1
-#     elif result == 1:
-#         if z ==  0:
-#             print(f"At time {time_stamp}, Bot MA sells at ${round(current_price, 2)} for {abs(share)} shares. \n")
-#             PL = PL + current_price
-#             Return = (PL / start_price)
-#             pct_return = "{:.2%}".format(Return)
-#             print("Total Profit/Loss $", round(PL, 2))
-#             print("Total Return %", pct_return, "\n")
-#             z = z+1
-
-# normal_return = round(((end_price-start_price)/start_price),4)*100
-# print(f"Total return for kNN strategy throughout the process is {pct_return}.")
-# print(f"Return of the company from beginning to end is {normal_return} %")

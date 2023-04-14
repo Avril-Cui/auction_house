@@ -1,0 +1,13 @@
+t = 100
+
+if not hold and sell signal, 0
+
+""Play around with time deltas
+Model(price_change(0, 99)) -> train
+X_train = price_change()
+current_price = [p0, p1, p2, ..., p100]
+price_delta = [p1-p0, p2-p1, ..., p100-p99]
+Y_train = (s0:buy, s1:sell, ...)
+
+Give all bots one vote -> collect votes
+Different time deltas, different values of hyperparameters

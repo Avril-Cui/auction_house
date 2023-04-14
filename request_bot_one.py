@@ -49,6 +49,8 @@ def register_bot(register_url, bot_name):
     })
     response = requests.request("POST", register_url, data=payload)
     print(response.status_code)
+    uid = str(response.content).split("'")[1].split("'")[0]
+    return uid
 
 def trade_stock(bot_name, bot_uid, price, share, comp_name, url="http://127.0.0.1:5000/"):
     payload = f"\"{comp_name}\""
@@ -89,10 +91,13 @@ def trade_stock(bot_name, bot_uid, price, share, comp_name, url="http://127.0.0.
         else:
             print(f"Sell order made successfully by {bot_name} at {price} for {abs(share)} shares.")
 
-for index in range(len(index_price)):
-    time_stamp = index
-    current_price = index_price[time_stamp]
-    order_book = get_order_book(current_price)
-    price, share, score = bot.evaluator_ma_surplus(index_price_df, time_stamp, order_book, st_moving_avg_period=15, lt_moving_avg_period=30)
-    trade_stock("Moving Average", "iMioxAB0MpNWoPFwIaZY2Y3jr4G3", price, share, "wrkn")
-    
+bot_id = register_bot("http://127.0.0.1:5000/register", "bot_ma")
+print(bot_id)
+# for index in range(len(index_price)):
+#     time_stamp = index
+#     current_price = index_price[time_stamp]
+#     order_book = get_order_book(current_price)
+#     price, share, score = bot.evaluator_ma_surplus(index_price_df, time_stamp, order_book, st_moving_avg_period=15, lt_moving_avg_period=30)
+#     trade_stock("bot_ma", bot_id, price, share, "wrkn")
+
+# order = requests.request("POST", "http://127.0.0.1:5000/get-active-orders", data=json.dumps("wrkn"))

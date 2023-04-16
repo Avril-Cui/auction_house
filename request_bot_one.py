@@ -102,16 +102,44 @@ def get_active_order_book(comp_name):
         accepted={False} AND company_name='{comp_name}' AND action='buy';
     """)
     buy_orders = list(cur.fetchall())
+    buy_order_book = OrderedDict(())
+    if buy_orders != []:
+        price = buy_orders[0][0]
+        shares = buy_orders[0][1]
+        for index in range(1, len(buy_orders)):
+            if buy_orders[index][0] == price:
+                shares += buy_orders[index][1]
+            elif index == len(buy_order_book):
+                buy_order_book.update({float(price): -float(shares)})
+            else:
+                buy_order_book.update({float(price): -float(shares)})
+                price = buy_orders[index][0]
+                shares = buy_orders[index][1]
 
     cur.execute(f"""
         SELECT price, shares, RANK() OVER (ORDER BY price DESC) as rank FROM orders WHERE 
         accepted={False} AND company_name='{comp_name}' AND action='sell';
     """)
     sell_orders = list(cur.fetchall())
+    sell_order_book = OrderedDict(())
+    if sell_orders != []:
+        price = sell_orders[0][0]
+        shares = sell_orders[0][1]
+        for index in range(1, len(sell_orders)):
+            if sell_orders[index][0] == price:
+                shares += sell_orders[index][1]
+            elif index == len(sell_order_book):
+                sell_order_book.update({float(price): float(shares)})
+            else:
+                sell_order_book.update({float(price), float(shares)})
+                price = sell_orders[index][0]
+                shares = sell_orders[index][1]
+    else:
+        sell_orders = []
     
-    order_book = buy_orders + sell_orders
-    print(order_book)
-    return order_book
+    sell_order_book.update(buy_order_book)
+    print(sell_order_book)
+    return sell_order_book
 
 
 get_active_order_book("wrkn")

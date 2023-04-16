@@ -11,3 +11,6 @@ Y_train = (s0:buy, s1:sell, ...)
 
 Give all bots one vote -> collect votes
 Different time deltas, different values of hyperparameters
+
+
+

@@ -91,8 +91,44 @@ def trade_stock(bot_name, bot_uid, price, share, comp_name, url="http://127.0.0.
         else:
             print(f"Sell order made successfully by {bot_name} at {price} for {abs(share)} shares.")
 
-bot_id = register_bot("http://127.0.0.1:5000/register", "bot_ma")
-print(bot_id)
+def get_active_order_book(comp_name, url="http://127.0.0.1:5000/"):
+    order_book = json.loads(requests.request("POST", f"{url}get-order-book", data=json.dumps(comp_name)).content)
+    return list(order_book)
+
+def get_active_order_book(comp_name):
+    ### get all buy orders from ranked from high to low
+    cur.execute(f"""
+        SELECT price, shares, RANK() OVER (ORDER BY price DESC) as rank FROM orders WHERE 
+        accepted={False} AND company_name='{comp_name}' AND action='buy';
+    """)
+    buy_orders = list(cur.fetchall())
+
+    cur.execute(f"""
+        SELECT price, shares, RANK() OVER (ORDER BY price DESC) as rank FROM orders WHERE 
+        accepted={False} AND company_name='{comp_name}' AND action='sell';
+    """)
+    sell_orders = list(cur.fetchall())
+    
+    order_book = buy_orders + sell_orders
+    print(order_book)
+    return order_book
+
+
+get_active_order_book("wrkn")
+# OrderedDict(((int(current_price)+5, 10), (int(current_price)+4, 20), (int(current_price)+3, 30), (int(current_price)+2, 40), (int(current_price)+1, 50), (int(current_price)-1, -50), (int(current_price)-2, -40), (int(current_price)-3, -30), (int(current_price)-4, -20), (int(current_price)-5, -10)))
+
+
+
+
+
+
+
+
+
+
+
+# bot_id = register_bot("http://127.0.0.1:5000/register", "bot_ma")
+# print(bot_id)
 # for index in range(len(index_price)):
 #     time_stamp = index
 #     current_price = index_price[time_stamp]
@@ -100,4 +136,5 @@ print(bot_id)
 #     price, share, score = bot.evaluator_ma_surplus(index_price_df, time_stamp, order_book, st_moving_avg_period=15, lt_moving_avg_period=30)
 #     trade_stock("bot_ma", bot_id, price, share, "wrkn")
 
-# order = requests.request("POST", "http://127.0.0.1:5000/get-active-orders", data=json.dumps("wrkn"))
+# order_book = json.loads(requests.request("POST", "http://127.0.0.1:5000/get-order-book", data=json.dumps("wrkn")).content)
+# print(order_book)

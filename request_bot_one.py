@@ -1,4 +1,5 @@
 import psycopg2
+import time
 import os
 from dotenv import load_dotenv
 load_dotenv()
@@ -140,31 +141,151 @@ def get_active_order_book(comp_name):
     print(sell_order_book)
     return sell_order_book
 
-def accept_order(price, action):
+def accept_order(price, shares, action, user_uid, comp_name):
     cur.execute(f"""
-        SELECT order_id FROM orders WHERE price={price} AND action='{action}';
-    """)
-    ids = list(cur.fetchall())
-    print(ids)
+		  SELECT cashvalue from users WHERE uid='{user_uid}';
+		""")
+    cash_value = float(cur.fetchone()[0])
     cur.execute(f"""
-        UPDATE orders SET accepted={True} WHERE order_id='{ids[0][0]}';
+		SELECT shares_holding from portfolio WHERE uid='{user_uid}' and company_id='{comp_name}';
     """)
-    conn.commit()
+    portfolio_data = cur.fetchone()
+    if portfolio_data != None:
+        shares_holding = float(portfolio_data[0])
 
-accept_order(995, "buy")
-orders = get_active_order_book("wrkn")
+    trade_value = shares * price
 
-###trader bots
-bot_id = register_bot("http://127.0.0.1:5000/register", "trade_ma")
-for index in range(len(index_price)):
-    time_stamp = index
-    current_price = 0
-    coefficient = bot.stg_ma(index_price_df, time_stamp, st_moving_avg_period=15, lt_moving_avg_period=30)
-    share = 50
-    if coefficient == 1:
-        trade_stock("trader_ma", bot_id, current_price, share, "wrkn")
-    elif coefficient == -1:
-        trade_stock("trader_ma", bot_id, current_price, -(share), "wrkn")
+    invalid = False
+
+    if trade_value > cash_value and shares > 0:
+        invalid = True
+        return "Invalid 2"
+    
+    elif shares > 0:
+        if portfolio_data != None:
+            cur.execute(f"""
+                INSERT INTO trade_history VALUES (
+                    '{user_uid}',
+                    '{comp_name}',
+                    {round(float(time.time()), 2)},
+                    {round(shares,2)},
+                    {round(trade_value,2)}
+                );
+                UPDATE users SET cashvalue = (cashvalue-{round(trade_value, 2)})
+                WHERE uid='{user_uid}';
+                UPDATE portfolio SET shares_holding = (shares_holding+{round(shares,2)})
+                WHERE uid='{user_uid}' and company_id='{comp_name}';
+                UPDATE portfolio SET cost = (cost+{round(trade_value,2)})
+                WHERE uid='{user_uid}' and company_id='{comp_name}';
+            """)
+            conn.commit()
+        else:
+            cur.execute(f"""
+                INSERT INTO trade_history VALUES (
+                    '{user_uid}',
+                    '{comp_name}',
+                    {round(float(time.time()), 2)},
+                    {round(shares,2)},
+                    {round(trade_value,2)}
+                );
+                UPDATE users SET cashvalue = (cashvalue-{round(trade_value, 2)})
+                WHERE uid='{user_uid}';
+                INSERT INTO portfolio VALUES (
+                    '{user_uid}',
+                    '{comp_name}',
+                    {round(shares,2)},
+                    {round(trade_value,2)}
+                );
+            """)
+            conn.commit()
+    else:
+        if portfolio_data != None:
+            if abs(shares) > shares_holding:
+                invalid = True
+                return "Invalid 1"
+            else:
+                cur.execute(f"""
+                    INSERT INTO trade_history VALUES (
+                        '{user_uid}',
+                        '{comp_name}',
+                        {round(float(time.time()), 2)},
+                        {round(shares,2)},
+                        {round(trade_value,2)}
+                    );
+                    UPDATE users SET cashvalue = (cashvalue+{abs(round(trade_value, 2))})
+                    WHERE uid='{user_uid}';
+                    UPDATE portfolio SET shares_holding = (shares_holding+{round(shares,2)})
+                    WHERE uid='{user_uid}' and company_id='{comp_name}';
+                    UPDATE portfolio SET cost = (cost+{round(trade_value,2)})
+                    WHERE uid='{user_uid}' and company_id='{comp_name}';
+                    
+                """)
+                conn.commit()
+        else:
+            invalid = True
+            return "Invalid 1"
+
+    if invalid == False:
+        cur.execute(f"""
+            SELECT order_id FROM orders WHERE price={price} AND action='{action}';
+        """)
+        ids = list(cur.fetchall())
+        print(ids)
+        cur.execute(f"""
+            UPDATE orders SET accepted={True} WHERE order_id='{ids[0][0]}';
+        """)
+        conn.commit()
+        cur.execute(f"""
+            SELECT user_uid from orders where order_id='{ids[0][0]}';
+        """)
+        accepted_user_uid = cur.fetchone()[0]
+        
+        if shares > 0:
+            cur.execute(f"""
+                INSERT INTO trade_history VALUES (
+                    '{accepted_user_uid}',
+                    '{comp_name}',
+                    {round(float(time.time()), 2)},
+                    {round(shares,2)},
+                    {round(trade_value,2)}
+                );
+                UPDATE portfolio SET shares_holding = (shares_holding+{round(shares,2)})
+                WHERE uid='{user_uid}' and company_id='{comp_name}';
+                UPDATE portfolio SET cost = (cost+{round(trade_value,2)})
+                WHERE uid='{user_uid}' and company_id='{comp_name}';
+            """)
+            conn.commit()
+        else:
+            cur.execute(f"""
+                INSERT INTO trade_history VALUES (
+                    '{accepted_user_uid}',
+                    '{comp_name}',
+                    {round(float(time.time()), 2)},
+                    {round(shares,2)},
+                    {round(trade_value,2)}
+                );
+                UPDATE portfolio SET shares_holding = (shares_holding+{round(shares,2)})
+                WHERE uid='{user_uid}' and company_id='{comp_name}';
+                UPDATE portfolio SET cost = (cost+{round(trade_value,2)})
+                WHERE uid='{user_uid}' and company_id='{comp_name}';
+            """)
+            conn.commit()
+
+
+
+# orders = get_active_order_book("wrkn")
+
+# ###trader bots
+# bot_id = register_bot("http://127.0.0.1:5000/register", "trade_ma")
+# for index in range(len(index_price)):
+#     time_stamp = index
+#     current_price = 0
+#     coefficient = bot.stg_ma(index_price_df, time_stamp, st_moving_avg_period=15, lt_moving_avg_period=30)
+#     share = 50
+#     if coefficient == 1:
+#         trade_stock("trader_ma", bot_id, current_price, share, "wrkn")
+#     elif coefficient == -1:
+#         trade_stock("trader_ma", bot_id, current_price, -(share), "wrkn")
 
 ###put trades
 # bot_id = register_bot("http://127.0.0.1:5000/register", "bot_ma")

@@ -53,7 +53,6 @@ def register_bot(register_url, bot_name):
     return uid
 
 def trade_stock(bot_name, bot_uid, price, share, comp_name, url="http://127.0.0.1:5000/"):
-    payload = f"\"{comp_name}\""
 
     if share > 0:
         buy_data = {
@@ -156,17 +155,16 @@ accept_order(995, "buy")
 orders = get_active_order_book("wrkn")
 
 ###trader bots
-bot_id = register_bot("http://127.0.0.1:5000/register", "trader_ma")
+bot_id = register_bot("http://127.0.0.1:5000/register", "trade_ma")
 for index in range(len(index_price)):
     time_stamp = index
-    current_price = index_price[time_stamp]
+    current_price = 0
     coefficient = bot.stg_ma(index_price_df, time_stamp, st_moving_avg_period=15, lt_moving_avg_period=30)
     share = 50
     if coefficient == 1:
         trade_stock("trader_ma", bot_id, current_price, share, "wrkn")
     elif coefficient == -1:
         trade_stock("trader_ma", bot_id, current_price, -(share), "wrkn")
-
 
 ###put trades
 # bot_id = register_bot("http://127.0.0.1:5000/register", "bot_ma")

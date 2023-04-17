@@ -109,12 +109,13 @@ def get_active_order_book(comp_name):
         for index in range(1, len(buy_orders)):
             if buy_orders[index][0] == price:
                 shares += buy_orders[index][1]
-            elif index == len(buy_order_book):
-                buy_order_book.update({float(price): -float(shares)})
             else:
                 buy_order_book.update({float(price): -float(shares)})
                 price = buy_orders[index][0]
                 shares = buy_orders[index][1]
+                
+            if index + 1 == len(buy_orders):
+                    buy_order_book.update({float(price): -float(shares)})
 
     cur.execute(f"""
         SELECT price, shares, RANK() OVER (ORDER BY price DESC) as rank FROM orders WHERE 
@@ -128,32 +129,20 @@ def get_active_order_book(comp_name):
         for index in range(1, len(sell_orders)):
             if sell_orders[index][0] == price:
                 shares += sell_orders[index][1]
-            elif index == len(sell_order_book):
-                sell_order_book.update({float(price): float(shares)})
+
             else:
                 sell_order_book.update({float(price), float(shares)})
                 price = sell_orders[index][0]
                 shares = sell_orders[index][1]
-    else:
-        sell_orders = []
+        if index + 1 == len(sell_orders):
+                    sell_order_book.update({float(price): float(shares)})
     
     sell_order_book.update(buy_order_book)
     print(sell_order_book)
     return sell_order_book
 
 
-get_active_order_book("wrkn")
-# OrderedDict(((int(current_price)+5, 10), (int(current_price)+4, 20), (int(current_price)+3, 30), (int(current_price)+2, 40), (int(current_price)+1, 50), (int(current_price)-1, -50), (int(current_price)-2, -40), (int(current_price)-3, -30), (int(current_price)-4, -20), (int(current_price)-5, -10)))
-
-
-
-
-
-
-
-
-
-
+orders = get_active_order_book("wrkn")
 
 # bot_id = register_bot("http://127.0.0.1:5000/register", "bot_ma")
 # print(bot_id)

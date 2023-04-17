@@ -67,7 +67,7 @@ class BotOne:
 				print(current_price, moving_low, moving_high)
 				return 0
 
-	def evaluator_ma_surplus(self, price_info, time_stamp, ordered_book, st_moving_avg_period=15, lt_moving_avg_period=30):
+	def evaluator_ma_surplus_accept(self, price_info, time_stamp, ordered_book, st_moving_avg_period=15, lt_moving_avg_period=30):
 		"""
 			Rule1 [Moving Average] -> direction:
 				BUY: When shorter-term MA crosses above the long-term MA: buy, return +1
@@ -115,7 +115,7 @@ class BotOne:
 		else:
 			return 0, 0, 0
 
-	def evaluator_momentum_surplus(self, price_info, volume_info, time_stamp, ordered_book, moving_avg_period=30):
+	def evaluator_momentum_surplus_accept(self, price_info, volume_info, time_stamp, ordered_book, moving_avg_period=30):
 		"""
 			Rule1 [Momentum] -> direction:
 				BUY:  When stock price is below the x day moving average and the daily
@@ -164,7 +164,7 @@ class BotOne:
 		else:
 			return 0, 0, 0
 
-	def evaluator_mean_reversion_surplus(self, price_info, time_stamp, ordered_book, moving_avg_period=30, n_std=1):
+	def evaluator_mean_reversion_surplus_accept(self, price_info, time_stamp, ordered_book, moving_avg_period=30, n_std=1):
 		"""
 			Rule1 [Mean Reversion] -> direction:
 				BUY: When price is above moving average + n * moving standard deviation
@@ -211,7 +211,7 @@ class BotOne:
 		else:
 			return 0, 0, 0
 
-	def evaluator_donchian_breakout_surplus(self, price_info, time_stamp, ordered_book, moving_avg_period=30):
+	def evaluator_donchian_breakout_surplus_accept(self, price_info, time_stamp, ordered_book, moving_avg_period=30):
 		"""
 			Rule1 [Donchian Breakout] -> direction:
 				BUY: When price is below Donchian lower bound
@@ -258,7 +258,7 @@ class BotOne:
 		else:
 			return 0, 0, 0
 
-	def evaluator_crazy_bot(self, price_info, time_stamp, ordered_book, share_lower_limit=50, share_upper_limit=200, n_std=1, moving_avg_period=30):
+	def evaluator_crazy_bot_accept(self, price_info, time_stamp, ordered_book, share_lower_limit=50, share_upper_limit=200, n_std=1, moving_avg_period=30):
 		print("Crazy Bot: Random Trading Behavior")
 		print("----------------------------------")
 
@@ -284,6 +284,34 @@ class BotOne:
 			return price, share
 		else:
 			print("No translation should proceed. \n")
+
+	def crazy_trader(self, price_info, time_stamp, ordered_book, share_lower_limit=50, share_upper_limit=200, n_std=1, moving_avg_period=30):
+		print("Crazy Bot: Random Trading Behavior")
+		print("----------------------------------")
+
+		trade_or_take = random.choice([0, 1])
+
+		if trade_or_take == 0: #take
+			price, share = random.choice(list(ordered_book.items()))
+		elif trade_or_take == 1: #trade
+			moving_std = price_info.rolling(window = moving_avg_period).std().to_list()[time_stamp]
+			current_price = price_info.to_list()[time_stamp]
+			buy_or_sell = random.choice([-1, 1])
+			share = random.randint(share_lower_limit, share_upper_limit) * buy_or_sell
+			if buy_or_sell == 1: #sell
+				price = current_price + n_std * moving_std
+			elif buy_or_sell == -1: #buy
+				price = current_price - n_std * moving_std
+
+		if share < 0:
+			print(f"Crazy Bot buys at ${round(price, 2)} for {abs(share)} shares. \n")
+			return price, share
+		elif share > 0:
+			print(f"Crazy Bot sells at ${round(price, 2)} for {share} shares. \n")
+			return price, share
+		else:
+			print("No translation should proceed. \n")
+
 
 
 price_data = pdr.get_data_yahoo("AAPL", "2015-3-9", "2017-1-1")

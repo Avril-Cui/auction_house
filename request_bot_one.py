@@ -155,6 +155,20 @@ def accept_order(price, action):
 accept_order(995, "buy")
 orders = get_active_order_book("wrkn")
 
+###trader bots
+bot_id = register_bot("http://127.0.0.1:5000/register", "trader_ma")
+for index in range(len(index_price)):
+    time_stamp = index
+    current_price = index_price[time_stamp]
+    coefficient = bot.stg_ma(index_price_df, time_stamp, st_moving_avg_period=15, lt_moving_avg_period=30)
+    share = 50
+    if coefficient == 1:
+        trade_stock("trader_ma", bot_id, current_price, share, "wrkn")
+    elif coefficient == -1:
+        trade_stock("trader_ma", bot_id, current_price, -(share), "wrkn")
+
+
+###put trades
 # bot_id = register_bot("http://127.0.0.1:5000/register", "bot_ma")
 # print(bot_id)
 # for index in range(len(index_price)):
@@ -164,14 +178,15 @@ orders = get_active_order_book("wrkn")
 #     price, share, score = bot.evaluator_ma_surplus(index_price_df, time_stamp, order_book, st_moving_avg_period=15, lt_moving_avg_period=30)
 #     trade_stock("bot_ma", bot_id, price, share, "wrkn")
 
-accepted = False
-for index in range(len(index_price)):
-    time_stamp = index
-    current_price = index_price[time_stamp]
-    price, share, score = bot.evaluator_ma_surplus(index_price_df, time_stamp, orders, st_moving_avg_period=15, lt_moving_avg_period=30)
-    if score > 0:
-        accept_order(price, "buy")
-    elif score < 0:
-        accept_order(price, "sell")
-    else:
-        pass
+###accept trades
+# accepted = False
+# for index in range(len(index_price)):
+#     time_stamp = index
+#     current_price = index_price[time_stamp]
+#     price, share, score = bot.evaluator_ma_surplus(index_price_df, time_stamp, orders, st_moving_avg_period=15, lt_moving_avg_period=30)
+#     if score > 0:
+#         accept_order(price, "buy")
+#     elif score < 0:
+#         accept_order(price, "sell")
+#     else:
+#         pass

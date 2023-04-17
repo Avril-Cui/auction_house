@@ -108,10 +108,10 @@ class BotOne:
 		
 		if score > 0:
 			print(f"Highest absolute score is {abs(score)}. Bot buys at ${price} for {abs(share)} shares. \n")
-			return price, share, score
+			return price, abs(share), score
 		elif score < 0:
 			print(f"Highest score is {abs(score)}. Bot sells at ${price} for {abs(share)} shares. \n")
-			return price, share, score
+			return price, abs(share), score
 		else:
 			return 0, 0, 0
 

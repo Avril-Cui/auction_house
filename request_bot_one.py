@@ -141,9 +141,9 @@ def get_active_order_book(comp_name):
     print(sell_order_book)
     return sell_order_book
 
-def accept_order(price):
+def accept_order(price, action):
     cur.execute(f"""
-        SELECT order_id FROM orders WHERE price={price};
+        SELECT order_id FROM orders WHERE price={price} AND action='{action}';
     """)
     ids = list(cur.fetchall())
     print(ids)
@@ -151,7 +151,8 @@ def accept_order(price):
         UPDATE orders SET accepted={True} WHERE order_id='{ids[0][0]}';
     """)
     conn.commit()
-accept_order(995)
+
+accept_order(995, "buy")
 orders = get_active_order_book("wrkn")
 
 # bot_id = register_bot("http://127.0.0.1:5000/register", "bot_ma")
@@ -163,9 +164,14 @@ orders = get_active_order_book("wrkn")
 #     price, share, score = bot.evaluator_ma_surplus(index_price_df, time_stamp, order_book, st_moving_avg_period=15, lt_moving_avg_period=30)
 #     trade_stock("bot_ma", bot_id, price, share, "wrkn")
 
-# accepted = False
-# for index in range(len(index_price)):
-#     time_stamp = index
-#     current_price = index_price[time_stamp]
-#     price, share, score = bot.evaluator_ma_surplus(index_price_df, time_stamp, orders, st_moving_avg_period=15, lt_moving_avg_period=30)
-    
+accepted = False
+for index in range(len(index_price)):
+    time_stamp = index
+    current_price = index_price[time_stamp]
+    price, share, score = bot.evaluator_ma_surplus(index_price_df, time_stamp, orders, st_moving_avg_period=15, lt_moving_avg_period=30)
+    if score > 0:
+        accept_order(price, "buy")
+    elif score < 0:
+        accept_order(price, "sell")
+    else:
+        pass

@@ -141,7 +141,17 @@ def get_active_order_book(comp_name):
     print(sell_order_book)
     return sell_order_book
 
-
+def accept_order(price):
+    cur.execute(f"""
+        SELECT order_id FROM orders WHERE price={price};
+    """)
+    ids = list(cur.fetchall())
+    print(ids)
+    cur.execute(f"""
+        UPDATE orders SET accepted={True} WHERE order_id='{ids[0][0]}';
+    """)
+    conn.commit()
+accept_order(995)
 orders = get_active_order_book("wrkn")
 
 # bot_id = register_bot("http://127.0.0.1:5000/register", "bot_ma")
@@ -153,5 +163,9 @@ orders = get_active_order_book("wrkn")
 #     price, share, score = bot.evaluator_ma_surplus(index_price_df, time_stamp, order_book, st_moving_avg_period=15, lt_moving_avg_period=30)
 #     trade_stock("bot_ma", bot_id, price, share, "wrkn")
 
-# order_book = json.loads(requests.request("POST", "http://127.0.0.1:5000/get-order-book", data=json.dumps("wrkn")).content)
-# print(order_book)
+# accepted = False
+# for index in range(len(index_price)):
+#     time_stamp = index
+#     current_price = index_price[time_stamp]
+#     price, share, score = bot.evaluator_ma_surplus(index_price_df, time_stamp, orders, st_moving_avg_period=15, lt_moving_avg_period=30)
+    

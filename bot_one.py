@@ -83,7 +83,9 @@ class BotOne:
 		share = 0
 		score = 0
 		coefficient = self.stg_ma(price_info, time_stamp, st_moving_avg_period, lt_moving_avg_period)
-		if coefficient == 1:
+		if len(ordered_book) == 0:
+			pass
+		elif coefficient == 1:
 			for price_tmp in ordered_book:
 				if ordered_book[price_tmp] < 0:
 					index = list(ordered_book.keys()).index(price_tmp)

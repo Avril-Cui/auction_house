@@ -1,3 +1,12 @@
+"""
+All bots/users have three possible actions:
+    1. Trade stock at equilibrium price
+    2. Put trade (buy or sell) at any desired price
+    3. Accept an existing order
+        - An user/bot can to the market and accept any orders
+        - An user/bot can put a trade -> if it is available in the market, then goes through
+"""
+
 import psycopg2
 import time
 import os
@@ -273,9 +282,9 @@ def accept_order(price, shares, action, user_uid, comp_name):
 
 
 
-# orders = get_active_order_book("wrkn")
+orders = get_active_order_book("wrkn")
 
-# ###trader bots
+###trader bots
 # bot_id = register_bot("http://127.0.0.1:5000/register", "trade_ma")
 # for index in range(len(index_price)):
 #     time_stamp = index
@@ -287,25 +296,26 @@ def accept_order(price, shares, action, user_uid, comp_name):
 #     elif coefficient == -1:
 #         trade_stock("trader_ma", bot_id, current_price, -(share), "wrkn")
 
-###put trades
+###put orders
 # bot_id = register_bot("http://127.0.0.1:5000/register", "bot_ma")
 # print(bot_id)
 # for index in range(len(index_price)):
 #     time_stamp = index
 #     current_price = index_price[time_stamp]
 #     order_book = get_order_book(current_price)
-#     price, share, score = bot.evaluator_ma_surplus(index_price_df, time_stamp, order_book, st_moving_avg_period=15, lt_moving_avg_period=30)
+#     price, share, score = bot.evaluator_ma_surplus_accept(index_price_df, time_stamp, order_book, st_moving_avg_period=15, lt_moving_avg_period=30)
 #     trade_stock("bot_ma", bot_id, price, share, "wrkn")
 
-###accept trades
-# accepted = False
-# for index in range(len(index_price)):
-#     time_stamp = index
-#     current_price = index_price[time_stamp]
-#     price, share, score = bot.evaluator_ma_surplus(index_price_df, time_stamp, orders, st_moving_avg_period=15, lt_moving_avg_period=30)
-#     if score > 0:
-#         accept_order(price, "buy")
-#     elif score < 0:
-#         accept_order(price, "sell")
-#     else:
-#         pass
+##accept trades
+bot_id = register_bot("http://127.0.0.1:5000/register", "accept_ma")
+accepted = False
+for index in range(len(index_price)):
+    time_stamp = index
+    current_price = index_price[time_stamp]
+    price, share, score = bot.evaluator_ma_surplus(index_price_df, time_stamp, orders, st_moving_avg_period=15, lt_moving_avg_period=30)
+    if score > 0:
+        accept_order(price, share, "buy", bot_id, "wrkn")
+    elif score < 0:
+        accept_order(price, share, "sell", bot_id, "wrkn")
+    else:
+        pass

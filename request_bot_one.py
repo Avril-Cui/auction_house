@@ -273,7 +273,7 @@ def accept_order(price, trade_action, user_uid, comp_name):
             """)
             conn.commit()  
             cur.execute(f"""
-                SELECT SUM (shares) as total_shares FROM orders WHERE action='{action}' AND price={price} AND user_uid='{user_uid}';
+                SELECT shares FROM orders WHERE action='{action}' AND price={price} AND order_id='{order_id}';
             """)
             conn.commit()
             shares = float(cur.fetchone()[0])
@@ -324,29 +324,17 @@ def accept_order(price, trade_action, user_uid, comp_name):
 #         trade_stock("trader_ma", bot_id, current_price, -(share), "wrkn")
 
 ###put orders
-# bot_id = register_bot("http://127.0.0.1:5000/register", "bot_ma")
-# print(bot_id)
-# for index in range(len(index_price)):
-#     time_stamp = index
-#     current_price = index_price[time_stamp]
-#     order_book = get_order_book(current_price)
-#     price, share, score = bot.evaluator_ma_surplus_accept(index_price_df, time_stamp, order_book, st_moving_avg_period=15, lt_moving_avg_period=30)
-#     trade_stock("bot_ma", bot_id, price, share, "wrkn")
+bot_id = register_bot("http://127.0.0.1:5000/register", "bot_ma")
+print(bot_id)
+for index in range(len(index_price)):
+    time_stamp = index
+    current_price = index_price[time_stamp]
+    order_book = get_order_book(current_price)
+    price, share, score = bot.evaluator_ma_surplus_accept(index_price_df, time_stamp, order_book, st_moving_avg_period=15, lt_moving_avg_period=30)
+    trade_stock("bot_ma", bot_id, price, share, "wrkn")
 
 ##accept trades
-# bot_id = register_bot("http://127.0.0.1:5000/register", "new_bot")
-bot_id = "0vYqDkUjRycZW2BwGaKLEkkwLnf1"
-# trade_stock("new_bot", bot_id, 0, 50, "wrkn")
-# print(bot_id)
+bot_id = register_bot("http://127.0.0.1:5000/register", "accept_bot")
+# bot_id = "0vYqDkUjRycZW2BwGaKLEkkwLnf1"
+trade_stock("accept_bot", bot_id, 0, 50, "wrkn")
 accept_order(985, "sell", bot_id, "wrkn")
-# accepted = False
-# for index in range(len(index_price)):
-#     time_stamp = index
-#     current_price = index_price[time_stamp]
-#     price, share, score = bot.evaluator_ma_surplus(index_price_df, time_stamp, orders, st_moving_avg_period=15, lt_moving_avg_period=30)
-#     if score > 0:
-#         accept_order(price, share, "buy", bot_id, "wrkn")
-#     elif score < 0:
-#         accept_order(price, share, "sell", bot_id, "wrkn")
-#     else:
-#         pass

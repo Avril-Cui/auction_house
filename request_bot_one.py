@@ -5,6 +5,7 @@ All bots/users have three possible actions:
     3. Accept an existing order
         - An user/bot can to the market and accept any orders
         - An user/bot can put a trade -> if it is available in the market, then goes through
+        - For a bot, when a price is passed through, it will take ALL the orders in the market
 """
 
 import psycopg2
@@ -150,10 +151,26 @@ def get_active_order_book(comp_name):
     print(sell_order_book)
     return sell_order_book
 
-def accept_order(price, shares, action, user_uid, comp_name):
+def accept_order(price, action, user_uid, comp_name):
+    cur.execute(f"""
+        SELECT order_id FROM orders WHERE price={price} AND action='{action}';
+    """)
+    ids = list(cur.fetchall())
+    share_number = 0
+    for index in range(len(ids)):
+        order_id = ids[index][0]
+        cur.execute(f"""
+            SELECT shares FROM orders WHERE order_id='{order_id}' AND action='{action}' AND price={price};
+        """)
+        shares=float(cur.fetchone()[0])
+        if action == "buy":
+            share_number+=shares
+        elif action == "sell":
+            share_number-=shares
+
     cur.execute(f"""
 		  SELECT cashvalue from users WHERE uid='{user_uid}';
-		""")
+    """)
     cash_value = float(cur.fetchone()[0])
     cur.execute(f"""
 		SELECT shares_holding from portfolio WHERE uid='{user_uid}' and company_id='{comp_name}';
@@ -162,27 +179,26 @@ def accept_order(price, shares, action, user_uid, comp_name):
     if portfolio_data != None:
         shares_holding = float(portfolio_data[0])
 
-    trade_value = shares * price
+    trade_value = share_number * price
 
     invalid = False
 
-    if trade_value > cash_value and shares > 0:
+    if trade_value > cash_value and share_number > 0:
         invalid = True
-        return "Invalid 2"
-    
-    elif shares > 0:
+        return "Invalid 2"  
+    elif share_number > 0:
         if portfolio_data != None:
             cur.execute(f"""
                 INSERT INTO trade_history VALUES (
                     '{user_uid}',
                     '{comp_name}',
                     {round(float(time.time()), 2)},
-                    {round(shares,2)},
+                    {round(share_number,2)},
                     {round(trade_value,2)}
                 );
                 UPDATE users SET cashvalue = (cashvalue-{round(trade_value, 2)})
                 WHERE uid='{user_uid}';
-                UPDATE portfolio SET shares_holding = (shares_holding+{round(shares,2)})
+                UPDATE portfolio SET shares_holding = (shares_holding+{round(share_number,2)})
                 WHERE uid='{user_uid}' and company_id='{comp_name}';
                 UPDATE portfolio SET cost = (cost+{round(trade_value,2)})
                 WHERE uid='{user_uid}' and company_id='{comp_name}';
@@ -194,7 +210,7 @@ def accept_order(price, shares, action, user_uid, comp_name):
                     '{user_uid}',
                     '{comp_name}',
                     {round(float(time.time()), 2)},
-                    {round(shares,2)},
+                    {round(share_number,2)},
                     {round(trade_value,2)}
                 );
                 UPDATE users SET cashvalue = (cashvalue-{round(trade_value, 2)})
@@ -202,14 +218,14 @@ def accept_order(price, shares, action, user_uid, comp_name):
                 INSERT INTO portfolio VALUES (
                     '{user_uid}',
                     '{comp_name}',
-                    {round(shares,2)},
+                    {round(share_number,2)},
                     {round(trade_value,2)}
                 );
             """)
             conn.commit()
     else:
         if portfolio_data != None:
-            if abs(shares) > shares_holding:
+            if abs(share_number) > shares_holding:
                 invalid = True
                 return "Invalid 1"
             else:
@@ -218,12 +234,12 @@ def accept_order(price, shares, action, user_uid, comp_name):
                         '{user_uid}',
                         '{comp_name}',
                         {round(float(time.time()), 2)},
-                        {round(shares,2)},
+                        {round(share_number,2)},
                         {round(trade_value,2)}
                     );
                     UPDATE users SET cashvalue = (cashvalue+{abs(round(trade_value, 2))})
                     WHERE uid='{user_uid}';
-                    UPDATE portfolio SET shares_holding = (shares_holding+{round(shares,2)})
+                    UPDATE portfolio SET shares_holding = (shares_holding+{round(share_number,2)})
                     WHERE uid='{user_uid}' and company_id='{comp_name}';
                     UPDATE portfolio SET cost = (cost+{round(trade_value,2)})
                     WHERE uid='{user_uid}' and company_id='{comp_name}';
@@ -235,54 +251,50 @@ def accept_order(price, shares, action, user_uid, comp_name):
             return "Invalid 1"
 
     if invalid == False:
-        cur.execute(f"""
-            SELECT order_id FROM orders WHERE price={price} AND action='{action}';
-        """)
-        ids = list(cur.fetchall())
-        print(ids)
-        cur.execute(f"""
-            UPDATE orders SET accepted={True} WHERE order_id='{ids[0][0]}';
-        """)
-        conn.commit()
-        cur.execute(f"""
-            SELECT user_uid from orders where order_id='{ids[0][0]}';
-        """)
-        accepted_user_uid = cur.fetchone()[0]
-        
-        if shares > 0:
+        for index in range(len(ids)):
+            order_id = ids[index][0]
+            user_uid = ids[index][1]
             cur.execute(f"""
-                INSERT INTO trade_history VALUES (
-                    '{accepted_user_uid}',
-                    '{comp_name}',
-                    {round(float(time.time()), 2)},
-                    {round(shares,2)},
-                    {round(trade_value,2)}
-                );
-                UPDATE portfolio SET shares_holding = (shares_holding+{round(shares,2)})
-                WHERE uid='{user_uid}' and company_id='{comp_name}';
-                UPDATE portfolio SET cost = (cost+{round(trade_value,2)})
-                WHERE uid='{user_uid}' and company_id='{comp_name}';
+                UPDATE orders SET accepted={True} WHERE order_id='{order_id}';
             """)
-            conn.commit()
-        else:
+            conn.commit()  
             cur.execute(f"""
-                INSERT INTO trade_history VALUES (
-                    '{accepted_user_uid}',
-                    '{comp_name}',
-                    {round(float(time.time()), 2)},
-                    {round(shares,2)},
-                    {round(trade_value,2)}
-                );
-                UPDATE portfolio SET shares_holding = (shares_holding+{round(shares,2)})
-                WHERE uid='{user_uid}' and company_id='{comp_name}';
-                UPDATE portfolio SET cost = (cost+{round(trade_value,2)})
-                WHERE uid='{user_uid}' and company_id='{comp_name}';
+                SELECT SUM (shares) as total_shares FROM orders WHERE action='{action}' AND price={price} AND user_uid='{user_uid}';
             """)
-            conn.commit()
+            shares = float(cur.fetchone()[0])
+            trade_value = shares * price
+            if action == 'buy':
+                cur.execute(f"""
+                    INSERT INTO trade_history VALUES (
+                        '{user_uid}',
+                        '{comp_name}',
+                        {round(float(time.time()), 2)},
+                        {round(shares,2)},
+                        {round(trade_value,2)}
+                    );
+                    UPDATE portfolio SET shares_holding = (shares_holding+{round(shares,2)})
+                    WHERE uid='{user_uid}' and company_id='{comp_name}';
+                    UPDATE portfolio SET cost = (cost+{round(trade_value,2)})
+                    WHERE uid='{user_uid}' and company_id='{comp_name}';
+                """)
+                conn.commit()
+            else:
+                cur.execute(f"""
+                    INSERT INTO trade_history VALUES (
+                        '{user_uid}',
+                        '{comp_name}',
+                        {round(float(time.time()), 2)},
+                        {-round(shares,2)},
+                        {-round(trade_value,2)}
+                    );
+                    UPDATE portfolio SET shares_holding = (shares_holding-{round(shares,2)})
+                    WHERE uid='{user_uid}' and company_id='{comp_name}';
+                    UPDATE portfolio SET cost = (cost-{round(trade_value,2)})
+                    WHERE uid='{user_uid}' and company_id='{comp_name}';
+                """)
+                conn.commit()
 
-
-
-orders = get_active_order_book("wrkn")
+# orders = get_active_order_book("wrkn")
 
 ###trader bots
 # bot_id = register_bot("http://127.0.0.1:5000/register", "trade_ma")
@@ -306,16 +318,16 @@ orders = get_active_order_book("wrkn")
 #     price, share, score = bot.evaluator_ma_surplus_accept(index_price_df, time_stamp, order_book, st_moving_avg_period=15, lt_moving_avg_period=30)
 #     trade_stock("bot_ma", bot_id, price, share, "wrkn")
 
-##accept trades
-bot_id = register_bot("http://127.0.0.1:5000/register", "accept_ma")
-accepted = False
-for index in range(len(index_price)):
-    time_stamp = index
-    current_price = index_price[time_stamp]
-    price, share, score = bot.evaluator_ma_surplus(index_price_df, time_stamp, orders, st_moving_avg_period=15, lt_moving_avg_period=30)
-    if score > 0:
-        accept_order(price, share, "buy", bot_id, "wrkn")
-    elif score < 0:
-        accept_order(price, share, "sell", bot_id, "wrkn")
-    else:
-        pass
+# ##accept trades
+# bot_id = register_bot("http://127.0.0.1:5000/register", "accept_ma")
+# accepted = False
+# for index in range(len(index_price)):
+#     time_stamp = index
+#     current_price = index_price[time_stamp]
+#     price, share, score = bot.evaluator_ma_surplus(index_price_df, time_stamp, orders, st_moving_avg_period=15, lt_moving_avg_period=30)
+#     if score > 0:
+#         accept_order(price, share, "buy", bot_id, "wrkn")
+#     elif score < 0:
+#         accept_order(price, share, "sell", bot_id, "wrkn")
+#     else:
+#         pass

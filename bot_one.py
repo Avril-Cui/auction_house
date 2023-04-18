@@ -24,7 +24,7 @@ class BotOne:
 	def stg_surplus(self, index):
 		return 0.2 * index
 	
-	def stg_momentum(self, price_info, volume_info, moving_avg_period, time_stamp):
+	def stg_momentum(self, price_info, volume_info, time_stamp, moving_avg_period=30):
 		price_moving_avg = price_info.rolling(window=moving_avg_period).mean().to_list()
 		volume_moving_avg = volume_info.rolling(window=moving_avg_period).mean().to_list()
 		price_list = price_info.to_list()
@@ -37,7 +37,7 @@ class BotOne:
 		else:
 			return 0
 
-	def stg_mean_reversion(self, price_info, moving_avg_period, time_stamp, n_std=1):
+	def stg_mean_reversion(self, price_info, time_stamp, n_std=1, moving_avg_period=30):
 		moving_avg = price_info.rolling(window = moving_avg_period).mean().to_list()[time_stamp]
 		moving_std = price_info.rolling(window = moving_avg_period).std().to_list()[time_stamp]
 		current_price = price_info.to_list()[time_stamp]
@@ -51,7 +51,7 @@ class BotOne:
 		else:
 			return 0	
 
-	def stg_donchian_breakout(self, price_info, moving_avg_period, time_stamp):
+	def stg_donchian_breakout(self, price_info, time_stamp, moving_avg_period=30):
 		if time_stamp == 0:
 			return 0
 		else:
@@ -132,7 +132,7 @@ class BotOne:
 		price = 0
 		share = 0
 		score = 0
-		coefficient = self.stg_momentum(price_info, volume_info, moving_avg_period, time_stamp)
+		coefficient = self.stg_momentum(price_info, volume_info, time_stamp, moving_avg_period)
 		
 		if coefficient == 1:
 			for price_tmp in ordered_book:
@@ -179,7 +179,7 @@ class BotOne:
 		price = 0
 		share = 0
 		score = 0
-		coefficient = self.stg_mean_reversion(price_info, moving_avg_period, time_stamp, n_std)
+		coefficient = self.stg_mean_reversion(price_info, time_stamp, n_std, moving_avg_period)
 		
 		if coefficient == 1:
 			for price_tmp in ordered_book:
@@ -258,7 +258,7 @@ class BotOne:
 		else:
 			return 0, 0, 0
 
-	def evaluator_crazy_bot_accept(self, price_info, time_stamp, ordered_book, share_lower_limit=50, share_upper_limit=200, n_std=1, moving_avg_period=30):
+	def crazy_bot(self, price_info, time_stamp, ordered_book, share_lower_limit=50, share_upper_limit=200, n_std=1, moving_avg_period=30):
 		print("Crazy Bot: Random Trading Behavior")
 		print("----------------------------------")
 
@@ -284,33 +284,10 @@ class BotOne:
 			return price, share
 		else:
 			print("No translation should proceed. \n")
-
-	def crazy_trader(self, price_info, time_stamp, ordered_book, share_lower_limit=50, share_upper_limit=200, n_std=1, moving_avg_period=30):
-		print("Crazy Bot: Random Trading Behavior")
-		print("----------------------------------")
-
-		trade_or_take = random.choice([0, 1])
-
-		if trade_or_take == 0: #take
-			price, share = random.choice(list(ordered_book.items()))
-		elif trade_or_take == 1: #trade
-			moving_std = price_info.rolling(window = moving_avg_period).std().to_list()[time_stamp]
-			current_price = price_info.to_list()[time_stamp]
-			buy_or_sell = random.choice([-1, 1])
-			share = random.randint(share_lower_limit, share_upper_limit) * buy_or_sell
-			if buy_or_sell == 1: #sell
-				price = current_price + n_std * moving_std
-			elif buy_or_sell == -1: #buy
-				price = current_price - n_std * moving_std
-
-		if share < 0:
-			print(f"Crazy Bot buys at ${round(price, 2)} for {abs(share)} shares. \n")
-			return price, share
-		elif share > 0:
-			print(f"Crazy Bot sells at ${round(price, 2)} for {share} shares. \n")
-			return price, share
-		else:
-			print("No translation should proceed. \n")
+	
+	def crazy_trader(self):
+		coefficient = random.choice([-1, 0, 1])
+		return coefficient
 
 
 

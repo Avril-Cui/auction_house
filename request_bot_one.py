@@ -151,9 +151,14 @@ def get_active_order_book(comp_name):
     print(sell_order_book)
     return sell_order_book
 
-def accept_order(price, action, user_uid, comp_name):
+def accept_order(price, trade_action, user_uid, comp_name):
+    if trade_action == "sell":
+        action = "buy"
+    elif trade_action == "buy":
+        action = "sell"
+    
     cur.execute(f"""
-        SELECT order_id FROM orders WHERE price={price} AND action='{action}';
+        SELECT order_id, user_uid FROM orders WHERE price={price} AND action='{action}';
     """)
     ids = list(cur.fetchall())
     share_number = 0
@@ -185,6 +190,7 @@ def accept_order(price, action, user_uid, comp_name):
 
     if trade_value > cash_value and share_number > 0:
         invalid = True
+        print("INVALID 2")
         return "Invalid 2"  
     elif share_number > 0:
         if portfolio_data != None:
@@ -227,6 +233,7 @@ def accept_order(price, action, user_uid, comp_name):
         if portfolio_data != None:
             if abs(share_number) > shares_holding:
                 invalid = True
+                print("INVALID 1")
                 return "Invalid 1"
             else:
                 cur.execute(f"""
@@ -248,11 +255,18 @@ def accept_order(price, action, user_uid, comp_name):
                 conn.commit()
         else:
             invalid = True
+            print("INVALID 1")
             return "Invalid 1"
 
     if invalid == False:
+        cur.execute(f"""
+            SELECT order_id, user_uid FROM orders WHERE price={price} AND action='{action}';
+        """)
+        ids = list(cur.fetchall())
+        print(ids)
         for index in range(len(ids)):
             order_id = ids[index][0]
+            print(order_id)
             user_uid = ids[index][1]
             cur.execute(f"""
                 UPDATE orders SET accepted={True} WHERE order_id='{order_id}';
@@ -261,6 +275,7 @@ def accept_order(price, action, user_uid, comp_name):
             cur.execute(f"""
                 SELECT SUM (shares) as total_shares FROM orders WHERE action='{action}' AND price={price} AND user_uid='{user_uid}';
             """)
+            conn.commit()
             shares = float(cur.fetchone()[0])
             trade_value = shares * price
             if action == 'buy':
@@ -318,8 +333,12 @@ def accept_order(price, action, user_uid, comp_name):
 #     price, share, score = bot.evaluator_ma_surplus_accept(index_price_df, time_stamp, order_book, st_moving_avg_period=15, lt_moving_avg_period=30)
 #     trade_stock("bot_ma", bot_id, price, share, "wrkn")
 
-# ##accept trades
-# bot_id = register_bot("http://127.0.0.1:5000/register", "accept_ma")
+##accept trades
+# bot_id = register_bot("http://127.0.0.1:5000/register", "new_bot")
+bot_id = "0vYqDkUjRycZW2BwGaKLEkkwLnf1"
+# trade_stock("new_bot", bot_id, 0, 50, "wrkn")
+# print(bot_id)
+accept_order(985, "sell", bot_id, "wrkn")
 # accepted = False
 # for index in range(len(index_price)):
 #     time_stamp = index

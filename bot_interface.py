@@ -1,5 +1,7 @@
 from bot_one import BotOne
-bot1 = BotOne
+from bot_three import BotThree
+bot1 = BotOne()
+bot2 = BotThree()
 
 company_lst = ["ast", "dsc", "fsin", "hhw", "jky", "sgo", "wrkn"]
 
@@ -90,3 +92,19 @@ def accepter(price_info, time_stamp, order_book, volume_info):
         }
     
         accept[company] = accept_company
+
+def bidder(price_info, shares=10):
+    bid = {}
+    for company in company_lst:
+        arima_price = bot2.arima_forecaster(price_info[company])
+        bid_company = {
+            "arima_bot": {
+                "share_number": shares,
+                "target_price": arima_price,
+                "comp_name": company,
+                "user_uid": "xxx"
+            }
+        }
+    
+        bid[company] = bid_company
+

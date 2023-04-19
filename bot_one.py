@@ -285,6 +285,10 @@ class BotOne:
 		else:
 			print("No translation should proceed. \n")
 	
+	def crazy_accepter(self, order_book):
+		price, share = random.choice(list(order_book.items()))
+		return price, share
+	
 	def crazy_trader(self):
 		coefficient = random.choice([-1, 0, 1])
 		return coefficient

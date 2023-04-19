@@ -4,6 +4,7 @@ import psycopg2
 import time
 import os
 import pandas as pd
+from collections import OrderedDict
 from dotenv import load_dotenv
 load_dotenv()
 DATABASE_HOST = os.getenv("DATABASE_HOST")
@@ -82,17 +83,16 @@ def trader(price_info, time_stamp, shares=10):
     return trade
 
 ###testing trader
-for index in range(len(price_info["index"])):
-    time_stamp = index
-    trader_result = trader(price_info, time_stamp)
-    if trader_result["index"]["ma_bot"]["share_number"] != 0 or trader_result["index"]["mean_reversion_bot"]["share_number"] != 0 or trader_result["index"]["donchain_bot"]["share_number"] != 0 or trader_result["index"]["crazy_bot"]["share_number"] != 0:
-        print(trader_result)
+# for index in range(len(price_info["index"])):
+#     time_stamp = index
+#     trader_result = trader(price_info, time_stamp)
+#     if trader_result["index"]["ma_bot"]["share_number"] != 0 or trader_result["index"]["mean_reversion_bot"]["share_number"] != 0 or trader_result["index"]["donchain_bot"]["share_number"] != 0 or trader_result["index"]["crazy_bot"]["share_number"] != 0:
+#         print(trader_result)
 
-def accepter(price_info, time_stamp, order_book, volume_info):
+def accepter(price_info, time_stamp, order_book):
     accept = {}
     for company in company_lst:
         ma_price, ma_share, ma_score = bot1.evaluator_ma_surplus_accept(price_info[company], time_stamp, order_book[company], st_moving_avg_period=15, lt_moving_avg_period=30)
-        momentum_price, momentum_share, momentum_score = bot1.evaluator_momentum_surplus_accept(price_info[company], volume_info[company], time_stamp, order_book[company], moving_avg_period=30)
         mean_rev_price, mean_rev_share, mean_rev_score = bot1.evaluator_mean_reversion_surplus_accept(price_info[company], time_stamp, order_book[company], moving_avg_period=30, n_std=1)
         donchain_price, donchain_share, donchain_score = bot1.evaluator_donchian_breakout_surplus_accept(price_info[company], time_stamp, order_book[company], moving_avg_period=30)
         crazy_price, crazy_share = bot1.crazy_accepter(order_book[company])
@@ -104,25 +104,19 @@ def accepter(price_info, time_stamp, order_book, volume_info):
                 "comp_name": company,
                 "user_uid": "xxx"
             },
-            "momentum_bot": {
-                "share_number": momentum_share,
-                "target_price": momentum_price,
-                "comp_name": company,
-                "user_uid": "xxx"
-            },
             "mean_reversion_bot": {
                 "share_number": mean_rev_share,
                 "target_price": mean_rev_price,
                 "comp_name": company,
                 "user_uid": "xxx"
             },
-            "ma_bot": {
+            "donchain_bot": {
                 "share_number": donchain_share,
                 "target_price": donchain_price,
                 "comp_name": company,
                 "user_uid": "xxx"
             },
-            "ma_bot": {
+            "crazy_bot": {
                 "share_number": crazy_share,
                 "target_price": crazy_price,
                 "comp_name": company,
@@ -132,6 +126,18 @@ def accepter(price_info, time_stamp, order_book, volume_info):
     
         accept[company] = accept_company
     return accept
+###testing accepter
+for index in range(len(price_info["index"])):
+    time_stamp = index
+    current_price = price_info["index"][time_stamp]
+    order_book_index = OrderedDict(((int(current_price)+5, 10), (int(current_price)+4, 20), (int(current_price)+3, 30), (int(current_price)+2, 40), (int(current_price)+1, 50), (int(current_price)-1, -50), (int(current_price)-2, -40), (int(current_price)-3, -30), (int(current_price)-4, -20), (int(current_price)-5, -10)))
+    order_book = {
+        "index": order_book_index
+    }
+    accepter_result = accepter(price_info, time_stamp, order_book)
+    if accepter_result["index"]["ma_bot"]["share_number"] != 0 or accepter_result["index"]["mean_reversion_bot"]["share_number"] != 0 or accepter_result["index"]["donchain_bot"]["share_number"] != 0 or accepter_result["index"]["crazy_bot"]["share_number"] != 0:
+        print(accepter_result)
+
 
 def bidder(price_info, shares=10):
     bid = {}

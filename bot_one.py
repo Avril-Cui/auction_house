@@ -9,7 +9,7 @@ class BotOne:
 	def __init__(self) -> None:
 		pass
 
-	def stg_ma(self, price_info, time_stamp, st_moving_avg_period, lt_moving_avg_period):
+	def stg_ma(self, price_info, time_stamp, st_moving_avg_period=15, lt_moving_avg_period=30):
 		st_moving_avg = price_info.rolling(
 			window=st_moving_avg_period).mean().to_list()
 		lt_moving_avg = price_info.rolling(
@@ -64,7 +64,6 @@ class BotOne:
 			elif current_price > moving_high:
 				return -1
 			else:
-				print(current_price, moving_low, moving_high)
 				return 0
 
 	def evaluator_ma_surplus_accept(self, price_info, time_stamp, ordered_book, st_moving_avg_period=15, lt_moving_avg_period=30):

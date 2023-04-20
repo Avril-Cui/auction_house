@@ -113,19 +113,19 @@ def trader(result_queue, price_info, time_stamp, shares=10):
             print(ma_decision)
 
         trade_company = {
-            "ma_bot": {
+            "MysticAdventurer": {
                 "share_number": ma_decision * shares,
                 "target_price": 0
             },
-            "mean_reversion_bot": {
+            "MagicRider": {
                 "share_number": mean_reversion_decision * shares,
                 "target_price": 0
             },
-            "donchain_bot": {
+            "DiamondCrystal": {
                 "share_number": donchain_decision * shares,
                 "target_price": 0
             },
-            "crazy_bot": {
+            "MadInvestor": {
                 "share_number": crazy_bot_decision * shares,
                 "target_price": 0
             }
@@ -147,19 +147,19 @@ def accepter(result_queue, price_info, time_stamp, order_book):
         crazy_price, crazy_share = bot1.crazy_accepter(order_book[company])
 
         accept_company = {
-            "ma_bot": {
+            "MysticAdventurer": {
                 "share_number": ma_share,
                 "target_price": ma_price
             },
-            "mean_reversion_bot": {
+            "MagicRider": {
                 "share_number": mean_rev_share,
                 "target_price": mean_rev_price
             },
-            "donchain_bot": {
+            "DiamondCrystal": {
                 "share_number": donchain_share,
                 "target_price": donchain_price
             },
-            "crazy_bot": {
+            "MadInvestor": {
                 "share_number": crazy_share,
                 "target_price": crazy_price
             }
@@ -186,10 +186,10 @@ def bidder(result_queue, price_info, time_stamp, shares=10, split = 50):
 
 
 if __name__ == '__main__':
-    register_bot("http://127.0.0.1:5000/register-bot", "ma_bot")
-    register_bot("http://127.0.0.1:5000/register-bot", "mean_reversion_bot")
-    register_bot("http://127.0.0.1:5000/register-bot", "donchain_bot")
-    register_bot("http://127.0.0.1:5000/register-bot", "crazy_bot")
+    register_bot("http://127.0.0.1:5000/register-bot", "MysticAdventurer") #ma_bot
+    register_bot("http://127.0.0.1:5000/register-bot", "MagicRider") #mean_reversion_bot
+    register_bot("http://127.0.0.1:5000/register-bot", "DiamondCrystal") #donchian_bot
+    register_bot("http://127.0.0.1:5000/register-bot", "MadInvestor") #crazy_bot
 
     order_book = {
         "index": get_active_order_book("index")
@@ -227,5 +227,12 @@ if __name__ == '__main__':
             result = result_queue.get()
             bot_data[result[0]] = result[1]
         
-        print(bot_data)
-            
+        response = requests.request("POST", "http://127.0.0.1:5000/bot-actions", data=json.dumps(bot_data))
+        if response.status_code == 401:
+            print("You do not owe enough shares of this stock.")
+        elif response.status_code == 402:
+            print("You do not have enough money for this trade")
+        elif response.status_code == 403:
+            print("Currently no shares available for trade. Your transaction will enter the pending state.")
+        else:
+            print("Success!")

@@ -132,12 +132,12 @@ def accepter(result_queue, price_info, time_stamp, order_book):
         accept[company] = accept_company
     result_queue.put(["accepter", accept])
 
-def bidder(price_info, time_stamp, shares=10, split = 50):
-    bid = {}
+def bidder(result_queue, price_info, time_stamp, shares=10, split = 50):
+    bidder = {}
     for company in company_lst:
         input_data = price_info[company][(time_stamp-split):time_stamp]
         arima_price = bot2.arima_forecaster(input_data)
-        bid_company = {
+        bidder_company = {
             "arima_bot": {
                 "share_number": shares,
                 "target_price": arima_price,
@@ -146,11 +146,11 @@ def bidder(price_info, time_stamp, shares=10, split = 50):
             }
         }
 
-        bid[company] = bid_company
-    return bid
+        bidder[company] = bidder_company
+    result_queue.put(["bider", bidder])
 
 if __name__ == '__main__':
-    for index in range(10):
+    for index in range(50, 60):
         bot_data = {}
 
         result_queue = Queue()
@@ -160,14 +160,28 @@ if __name__ == '__main__':
         order_book = {
             "index": order_book_index
         }
-        t1 = Thread(target=trader, args=(result_queue, price_info, time_stamp))
-        t2 = Thread(target=accepter, args=(result_queue, price_info, time_stamp, order_book))
+        split = 50
+        if time_stamp >= split:
+            t1 = Thread(target=trader, args=(result_queue, price_info, time_stamp))
+            t2 = Thread(target=accepter, args=(result_queue, price_info, time_stamp, order_book))
+            t3 = Thread(target=bidder, args=(result_queue, price_info, time_stamp))
 
-        t1.start()
-        t2.start()
+            t1.start()
+            t2.start()
+            t3.start()
 
-        t1.join()
-        t2.join()
+            t1.join()
+            t2.join()
+            t3.join()
+        else:
+            t1 = Thread(target=trader, args=(result_queue, price_info, time_stamp))
+            t2 = Thread(target=accepter, args=(result_queue, price_info, time_stamp, order_book))
+
+            t1.start()
+            t2.start()
+
+            t1.join()
+            t2.join()
 
         while not result_queue.empty():
             result = result_queue.get()

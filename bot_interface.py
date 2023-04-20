@@ -5,6 +5,8 @@ import time
 import os
 import pandas as pd
 from collections import OrderedDict
+from queue import Queue
+from threading import Thread
 from dotenv import load_dotenv
 load_dotenv()
 DATABASE_HOST = os.getenv("DATABASE_HOST")
@@ -44,7 +46,7 @@ bot2 = BotThree()
 company_lst = ["index"]
 
 
-def trader(price_info, time_stamp, shares=10):
+def trader(result_queue, price_info, time_stamp, shares=10):
     trade = {}
     for company in company_lst:
         ma_decision = bot1.stg_ma(
@@ -87,9 +89,9 @@ def trader(price_info, time_stamp, shares=10):
 
         trade[company] = trade_company
 
-    return trade
+    result_queue.put(["trader", trade])
 
-def accepter(price_info, time_stamp, order_book):
+def accepter(result_queue, price_info, time_stamp, order_book):
     accept = {}
     for company in company_lst:
         ma_price, ma_share, ma_score = bot1.evaluator_ma_surplus_accept(
@@ -128,7 +130,7 @@ def accepter(price_info, time_stamp, order_book):
         }
 
         accept[company] = accept_company
-    return accept
+    result_queue.put(["accepter", accept])
 
 def bidder(price_info, time_stamp, shares=10, split = 50):
     bid = {}
@@ -146,6 +148,33 @@ def bidder(price_info, time_stamp, shares=10, split = 50):
 
         bid[company] = bid_company
     return bid
+
+if __name__ == '__main__':
+    for index in range(10):
+        bot_data = {}
+
+        result_queue = Queue()
+        time_stamp = index
+        current_price = price_info["index"][time_stamp]
+        order_book_index = OrderedDict(((int(current_price)+5, 10), (int(current_price)+4, 20), (int(current_price)+3, 30), (int(current_price)+2, 40), (int(current_price)+1, 50), (int(current_price)-1, -50), (int(current_price)-2, -40), (int(current_price)-3, -30), (int(current_price)-4, -20), (int(current_price)-5, -10)))
+        order_book = {
+            "index": order_book_index
+        }
+        t1 = Thread(target=trader, args=(result_queue, price_info, time_stamp))
+        t2 = Thread(target=accepter, args=(result_queue, price_info, time_stamp, order_book))
+
+        t1.start()
+        t2.start()
+
+        t1.join()
+        t2.join()
+
+        while not result_queue.empty():
+            result = result_queue.get()
+            bot_data[result[0]] = result[1]
+        
+        print(bot_data)
+            
 
 ###testing trader
 # for index in range(len(price_info["index"])):

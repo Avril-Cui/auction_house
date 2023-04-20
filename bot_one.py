@@ -75,9 +75,6 @@ class BotOne:
 				Buy: highest sell order, return 1, 0.8, 0.6, 0.4, 0.2
 				Sell: lowest buy order, return -1, -0.8, -0.6, -0.4, -0.2
 		"""
-		
-		print("Bot 1: MA and surplus")
-		print("---------------------")
 		price = 0
 		share = 0
 		score = 0
@@ -125,9 +122,6 @@ class BotOne:
 				Buy: highest sell order, return 1, 0.8, 0.6, 0.4, 0.2
 				Sell: lowest buy order, return -1, -0.8, -0.6, -0.4, -0.2
 		"""
-
-		print("Bot 2: Momentum and surplus")
-		print("---------------------------")
 		price = 0
 		share = 0
 		score = 0
@@ -172,9 +166,6 @@ class BotOne:
 				Buy: highest sell order, return 1, 0.8, 0.6, 0.4, 0.2
 				Sell: lowest buy order, return -1, -0.8, -0.6, -0.4, -0.2
 		"""
-
-		print("Bot 3: Mean reversion and surplus")
-		print("---------------------------------")
 		price = 0
 		share = 0
 		score = 0
@@ -219,9 +210,6 @@ class BotOne:
 				Buy: highest sell order, return 1, 0.8, 0.6, 0.4, 0.2
 				Sell: lowest buy order, return -1, -0.8, -0.6, -0.4, -0.2
 		"""
-
-		print("Bot 4: Donchian breakout and surplus")
-		print("------------------------------------")
 		price = 0
 		share = 0
 		score = 0
@@ -258,9 +246,6 @@ class BotOne:
 			return 0, 0, 0
 
 	def crazy_bot(self, price_info, time_stamp, ordered_book, share_lower_limit=50, share_upper_limit=200, n_std=1, moving_avg_period=30):
-		print("Crazy Bot: Random Trading Behavior")
-		print("----------------------------------")
-
 		trade_or_take = random.choice([0, 1])
 
 		if trade_or_take == 0: #take

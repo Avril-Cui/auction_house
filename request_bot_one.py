@@ -101,9 +101,9 @@ def trade_stock(bot_name, bot_uid, price, share, comp_name, url="http://127.0.0.
         else:
             print(f"Sell order made successfully by {bot_name} at {price} for {abs(share)} shares.")
 
-def get_active_order_book(comp_name, url="http://127.0.0.1:5000/"):
-    order_book = json.loads(requests.request("POST", f"{url}get-order-book", data=json.dumps(comp_name)).content)
-    return list(order_book)
+# def get_active_order_book(comp_name, url="http://127.0.0.1:5000/"):
+#     order_book = json.loads(requests.request("POST", f"{url}get-order-book", data=json.dumps(comp_name)).content)
+#     return list(order_book)
 
 def get_active_order_book(comp_name):
     ### get all buy orders from ranked from high to low

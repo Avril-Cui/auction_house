@@ -8,6 +8,8 @@ from collections import OrderedDict
 from queue import Queue
 from threading import Thread
 from dotenv import load_dotenv
+import json
+import requests
 load_dotenv()
 DATABASE_HOST = os.getenv("DATABASE_HOST")
 DATABASE_USER = os.getenv("DATABASE_USER")
@@ -45,6 +47,56 @@ bot2 = BotThree()
 # company_lst = ["ast", "dsc", "fsin", "hhw", "jky", "sgo", "index"]
 company_lst = ["index"]
 
+def register_bot(register_url, bot_name):
+    payload = json.dumps(bot_name)
+    response = requests.request("POST", register_url, data=payload)
+    print(response.status_code)
+
+def get_active_order_book(comp_name):
+    ### get all buy orders from ranked from high to low
+    cur.execute(f"""
+        SELECT price, shares, RANK() OVER (ORDER BY price DESC) as rank FROM orders WHERE 
+        accepted={False} AND company_name='{comp_name}' AND action='buy';
+    """)
+    buy_orders = list(cur.fetchall())
+    buy_order_book = OrderedDict(())
+    if buy_orders != []:
+        price = buy_orders[0][0]
+        shares = buy_orders[0][1]
+        for index in range(1, len(buy_orders)):
+            if buy_orders[index][0] == price:
+                shares += buy_orders[index][1]
+            else:
+                buy_order_book.update({float(price): -float(shares)})
+                price = buy_orders[index][0]
+                shares = buy_orders[index][1]
+                
+            if index + 1 == len(buy_orders):
+                    buy_order_book.update({float(price): -float(shares)})
+
+    cur.execute(f"""
+        SELECT price, shares, RANK() OVER (ORDER BY price DESC) as rank FROM orders WHERE 
+        accepted={False} AND company_name='{comp_name}' AND action='sell';
+    """)
+    sell_orders = list(cur.fetchall())
+    sell_order_book = OrderedDict(())
+    if sell_orders != []:
+        price = sell_orders[0][0]
+        shares = sell_orders[0][1]
+        for index in range(1, len(sell_orders)):
+            if sell_orders[index][0] == price:
+                shares += sell_orders[index][1]
+
+            else:
+                sell_order_book.update({float(price), float(shares)})
+                price = sell_orders[index][0]
+                shares = sell_orders[index][1]
+        if index + 1 == len(sell_orders):
+                    sell_order_book.update({float(price): float(shares)})
+    
+    sell_order_book.update(buy_order_book)
+    print(sell_order_book)
+    return sell_order_book
 
 def trader(result_queue, price_info, time_stamp, shares=10):
     trade = {}
@@ -63,27 +115,19 @@ def trader(result_queue, price_info, time_stamp, shares=10):
         trade_company = {
             "ma_bot": {
                 "share_number": ma_decision * shares,
-                "target_price": 0,
-                "comp_name": company,
-                "user_uid": "xxx"
+                "target_price": 0
             },
             "mean_reversion_bot": {
                 "share_number": mean_reversion_decision * shares,
-                "target_price": 0,
-                "comp_name": company,
-                "user_uid": "xxx"
+                "target_price": 0
             },
             "donchain_bot": {
                 "share_number": donchain_decision * shares,
-                "target_price": 0,
-                "comp_name": company,
-                "user_uid": "xxx"
+                "target_price": 0
             },
             "crazy_bot": {
                 "share_number": crazy_bot_decision * shares,
-                "target_price": 0,
-                "comp_name": company,
-                "user_uid": "xxx"
+                "target_price": 0
             }
         }
 
@@ -105,27 +149,19 @@ def accepter(result_queue, price_info, time_stamp, order_book):
         accept_company = {
             "ma_bot": {
                 "share_number": ma_share,
-                "target_price": ma_price,
-                "comp_name": company,
-                "user_uid": "xxx"
+                "target_price": ma_price
             },
             "mean_reversion_bot": {
                 "share_number": mean_rev_share,
-                "target_price": mean_rev_price,
-                "comp_name": company,
-                "user_uid": "xxx"
+                "target_price": mean_rev_price
             },
             "donchain_bot": {
                 "share_number": donchain_share,
-                "target_price": donchain_price,
-                "comp_name": company,
-                "user_uid": "xxx"
+                "target_price": donchain_price
             },
             "crazy_bot": {
                 "share_number": crazy_share,
-                "target_price": crazy_price,
-                "comp_name": company,
-                "user_uid": "xxx"
+                "target_price": crazy_price
             }
         }
 
@@ -140,26 +176,30 @@ def bidder(result_queue, price_info, time_stamp, shares=10, split = 50):
         bidder_company = {
             "arima_bot": {
                 "share_number": shares,
-                "target_price": arima_price,
-                "comp_name": company,
-                "user_uid": "xxx"
+                "target_price": arima_price
             }
         }
 
         bidder[company] = bidder_company
-    result_queue.put(["bider", bidder])
+    result_queue.put(["bidder", bidder])
+
+
 
 if __name__ == '__main__':
+    register_bot("http://127.0.0.1:5000/register-bot", "ma_bot")
+    register_bot("http://127.0.0.1:5000/register-bot", "mean_reversion_bot")
+    register_bot("http://127.0.0.1:5000/register-bot", "donchain_bot")
+    register_bot("http://127.0.0.1:5000/register-bot", "crazy_bot")
+
+    order_book = {
+        "index": get_active_order_book("index")
+    }
+
     for index in range(50, 60):
         bot_data = {}
 
         result_queue = Queue()
         time_stamp = index
-        current_price = price_info["index"][time_stamp]
-        order_book_index = OrderedDict(((int(current_price)+5, 10), (int(current_price)+4, 20), (int(current_price)+3, 30), (int(current_price)+2, 40), (int(current_price)+1, 50), (int(current_price)-1, -50), (int(current_price)-2, -40), (int(current_price)-3, -30), (int(current_price)-4, -20), (int(current_price)-5, -10)))
-        order_book = {
-            "index": order_book_index
-        }
         split = 50
         if time_stamp >= split:
             t1 = Thread(target=trader, args=(result_queue, price_info, time_stamp))
@@ -189,29 +229,3 @@ if __name__ == '__main__':
         
         print(bot_data)
             
-
-###testing trader
-# for index in range(len(price_info["index"])):
-#     time_stamp = index
-#     trader_result = trader(price_info, time_stamp)
-#     if trader_result["index"]["ma_bot"]["share_number"] != 0 or trader_result["index"]["mean_reversion_bot"]["share_number"] != 0 or trader_result["index"]["donchain_bot"]["share_number"] != 0 or trader_result["index"]["crazy_bot"]["share_number"] != 0:
-#         print(trader_result)
-
-### testing accepter
-# for index in range(len(price_info["index"])):
-#     time_stamp = index
-#     current_price = price_info["index"][time_stamp]
-#     order_book_index = OrderedDict(((int(current_price)+5, 10), (int(current_price)+4, 20), (int(current_price)+3, 30), (int(current_price)+2, 40), (int(
-#         current_price)+1, 50), (int(current_price)-1, -50), (int(current_price)-2, -40), (int(current_price)-3, -30), (int(current_price)-4, -20), (int(current_price)-5, -10)))
-#     order_book = {
-#         "index": order_book_index
-#     }
-#     accepter_result = accepter(price_info, time_stamp, order_book)
-#     if accepter_result["index"]["ma_bot"]["share_number"] != 0 or accepter_result["index"]["mean_reversion_bot"]["share_number"] != 0 or accepter_result["index"]["donchain_bot"]["share_number"] != 0 or accepter_result["index"]["crazy_bot"]["share_number"] != 0:
-#         print(accepter_result)
-
-### testing trader
-# for index in range(50,60):
-#     time_stamp = index
-#     bidder_result = bidder(price_info, time_stamp)
-#     print(bidder_result)

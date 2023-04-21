@@ -35,8 +35,11 @@ def get_price_from_database(company_id):
 # company_lst = ["ast", "dsc", "fsin", "hhw", "jky", "sgo", "index"]
 company_lst = ["index"]
 
-def register_bot(register_url, bot_name):
-    payload = json.dumps(bot_name)
+def register_bot(register_url, bot_name, initial_price):
+    payload = json.dumps({
+        "bot_name": bot_name,
+        "initial_price": initial_price
+    })
     response = requests.request("POST", register_url, data=payload)
     print(response.status_code)
 
@@ -169,7 +172,6 @@ def bidder(result_queue, price_info, time_stamp, shares=10, split = 50):
     result_queue.put(["bidder", bidder])
 
 
-
 if __name__ == '__main__':
     bot1 = BotOne()
     bot2 = BotThree()
@@ -188,10 +190,10 @@ if __name__ == '__main__':
     initial_price = {
         "index": index_price[0]
     }
-    register_bot("http://127.0.0.1:5000/register-bot", "MysticAdventurer") #ma_bot
-    register_bot("http://127.0.0.1:5000/register-bot", "MagicRider") #mean_reversion_bot
-    register_bot("http://127.0.0.1:5000/register-bot", "DiamondCrystal") #donchian_bot
-    register_bot("http://127.0.0.1:5000/register-bot", "MadInvestor") #crazy_bot
+    register_bot("http://127.0.0.1:5000/register-bot", "MysticAdventurer", initial_price) #ma_bot
+    register_bot("http://127.0.0.1:5000/register-bot", "MagicRider", initial_price) #mean_reversion_bot
+    register_bot("http://127.0.0.1:5000/register-bot", "DiamondCrystal", initial_price) #donchian_bot
+    register_bot("http://127.0.0.1:5000/register-bot", "MadInvestor", initial_price) #crazy_bot
 
 
     for index in range(0,2):
@@ -225,6 +227,16 @@ if __name__ == '__main__':
         while not result_queue.empty():
             result = result_queue.get()
             bot_data[result[0]] = result[1]
+        
+        if "bidder" not in bot_data:
+            bot_data["bidder"] = {
+                "index": {
+                    "arima_bot": {
+                        "share_number": 0,
+                        "target_price": 0
+                    }
+                }
+            }
         
         response = requests.request("POST", "http://127.0.0.1:5000/bot-actions", data=json.dumps(bot_data))
         if response.status_code == 401:

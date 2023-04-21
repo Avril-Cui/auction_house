@@ -32,18 +32,6 @@ def get_price_from_database(company_id):
     price = list(cur.fetchone()[0])
     return price
 
-
-index_price = get_price_from_database("index")[60*60*10:60*60*11]
-index_price = [float(i) for i in index_price]
-index_price_df = pd.DataFrame(index_price, columns=["index_price"])[
-    "index_price"]
-price_info = {
-    "index": index_price_df
-}
-
-bot1 = BotOne()
-bot2 = BotThree()
-
 # company_lst = ["ast", "dsc", "fsin", "hhw", "jky", "sgo", "index"]
 company_lst = ["index"]
 
@@ -95,7 +83,6 @@ def get_active_order_book(comp_name):
                     sell_order_book.update({float(price): float(shares)})
     
     sell_order_book.update(buy_order_book)
-    print(sell_order_book)
     return sell_order_book
 
 def trader(result_queue, price_info, time_stamp, shares=10):
@@ -108,9 +95,6 @@ def trader(result_queue, price_info, time_stamp, shares=10):
         donchain_decision = bot1.stg_donchian_breakout(
             price_info[company], time_stamp, moving_avg_period=30)
         crazy_bot_decision = bot1.crazy_trader()
-
-        if ma_decision != 0:
-            print(ma_decision)
 
         trade_company = {
             "MysticAdventurer": {
@@ -144,6 +128,7 @@ def accepter(result_queue, price_info, time_stamp, order_book):
             price_info[company], time_stamp, order_book[company], moving_avg_period=30, n_std=1)
         donchain_price, donchain_share, donchain_score = bot1.evaluator_donchian_breakout_surplus_accept(
             price_info[company], time_stamp, order_book[company], moving_avg_period=30)
+
         crazy_price, crazy_share = bot1.crazy_accepter(order_book[company])
 
         accept_company = {
@@ -186,16 +171,30 @@ def bidder(result_queue, price_info, time_stamp, shares=10, split = 50):
 
 
 if __name__ == '__main__':
+    bot1 = BotOne()
+    bot2 = BotThree()
+
+    index_price = get_price_from_database("index")[60*60*10:60*60*11]
+    index_price = [float(i) for i in index_price]
+    index_price_df = pd.DataFrame(index_price, columns=["index_price"])[
+        "index_price"]
+    price_info = {
+        "index": index_price_df
+    }
+    order_book = {
+        "index": get_active_order_book("wrkn")
+    }
+
+    initial_price = {
+        "index": index_price[0]
+    }
     register_bot("http://127.0.0.1:5000/register-bot", "MysticAdventurer") #ma_bot
     register_bot("http://127.0.0.1:5000/register-bot", "MagicRider") #mean_reversion_bot
     register_bot("http://127.0.0.1:5000/register-bot", "DiamondCrystal") #donchian_bot
     register_bot("http://127.0.0.1:5000/register-bot", "MadInvestor") #crazy_bot
 
-    order_book = {
-        "index": get_active_order_book("index")
-    }
 
-    for index in range(50, 60):
+    for index in range(0,2):
         bot_data = {}
 
         result_queue = Queue()
@@ -235,4 +234,7 @@ if __name__ == '__main__':
         elif response.status_code == 403:
             print("Currently no shares available for trade. Your transaction will enter the pending state.")
         else:
-            print("Success!")
+            print(bot_data)
+            print('\n')
+        
+        time.sleep(2)

@@ -324,7 +324,7 @@ def accept_order(price, trade_action, user_uid, comp_name):
 #         trade_stock("trader_ma", bot_id, current_price, -(share), "wrkn")
 
 ###put orders
-bot_id = register_bot("http://127.0.0.1:5000/register", "bot_ma")
+bot_id = register_bot("http://127.0.0.1:5000/register", "test")
 print(bot_id)
 for index in range(len(index_price)):
     time_stamp = index
@@ -334,7 +334,7 @@ for index in range(len(index_price)):
     trade_stock("bot_ma", bot_id, price, share, "wrkn")
 
 ##accept trades
-bot_id = register_bot("http://127.0.0.1:5000/register", "accept_bot")
-# bot_id = "0vYqDkUjRycZW2BwGaKLEkkwLnf1"
-trade_stock("accept_bot", bot_id, 0, 50, "wrkn")
-accept_order(985, "sell", bot_id, "wrkn")
+# bot_id = register_bot("http://127.0.0.1:5000/register", "accept_bot")
+# # bot_id = "0vYqDkUjRycZW2BwGaKLEkkwLnf1"
+# trade_stock("accept_bot", bot_id, 0, 50, "wrkn")
+# accept_order(985, "sell", bot_id, "wrkn")

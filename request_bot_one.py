@@ -333,8 +333,8 @@ for index in range(len(index_price)):
     price, share, score = bot.evaluator_ma_surplus_accept(index_price_df, time_stamp, order_book, st_moving_avg_period=15, lt_moving_avg_period=30)
     trade_stock("bot_ma", bot_id, price, share, "wrkn")
 
-##accept trades
-# bot_id = register_bot("http://127.0.0.1:5000/register", "accept_bot")
-# # bot_id = "0vYqDkUjRycZW2BwGaKLEkkwLnf1"
-# trade_stock("accept_bot", bot_id, 0, 50, "wrkn")
-# accept_order(985, "sell", bot_id, "wrkn")
+#accept trades
+bot_id = register_bot("http://127.0.0.1:5000/register", "accept_bot")
+# bot_id = "0vYqDkUjRycZW2BwGaKLEkkwLnf1"
+trade_stock("accept_bot", bot_id, 0, 50, "wrkn")
+accept_order(985, "sell", bot_id, "wrkn")

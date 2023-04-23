@@ -180,19 +180,19 @@ if __name__ == '__main__':
     bot1 = BotOne()
     bot2 = BotThree()
 
-    ast_price = get_price_from_database("ast")[60*60*10:60*60*11]
+    ast_price = get_price_from_database("ast")
     ast_price_df = pd.DataFrame(ast_price, columns=["price"])["price"]
-    dsc_price = get_price_from_database("dsc")[60*60*10:60*60*11]
+    dsc_price = get_price_from_database("dsc")
     dsc_price_df = pd.DataFrame(dsc_price, columns=["price"])["price"]
-    fsin_price = get_price_from_database("fsin")[60*60*10:60*60*11]
+    fsin_price = get_price_from_database("fsin")
     fsin_price_df = pd.DataFrame(fsin_price, columns=["price"])["price"]
-    hhw_price = get_price_from_database("hhw")[60*60*10:60*60*11]
+    hhw_price = get_price_from_database("hhw")
     hhw_price_df = pd.DataFrame(hhw_price, columns=["price"])["price"]
-    jky_price = get_price_from_database("jky")[60*60*10:60*60*11]
+    jky_price = get_price_from_database("jky")
     jky_price_df = pd.DataFrame(jky_price, columns=["price"])["price"]
-    sgo_price = get_price_from_database("sgo")[60*60*10:60*60*11]
+    sgo_price = get_price_from_database("sgo")
     sgo_price_df = pd.DataFrame(sgo_price, columns=["price"])["price"]
-    wrkn_price = get_price_from_database("wrkn")[60*60*10:60*60*11]
+    wrkn_price = get_price_from_database("wrkn")
     wrkn_price_df = pd.DataFrame(wrkn_price, columns=["price"])["price"]
 
     price_info = {
@@ -232,7 +232,7 @@ if __name__ == '__main__':
     register_bot("http://127.0.0.1:5000/register-bot", "Arima", initial_price) #arima_bot
     register_bot("http://127.0.0.1:5000/register-bot", "KnightNexus", initial_price) #arima_bot
 
-    for index in range(0,2):
+    for index in range(len(ast_price)):
         bot_data = {}
 
         result_queue = Queue()

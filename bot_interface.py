@@ -27,13 +27,13 @@ cur = conn.cursor()
 
 def get_price_from_database(company_id):
     cur.execute(f"""
-          SELECT price_list from test_prices WHERE company_id='{company_id}';
+          SELECT price_list from prices WHERE company_id='{company_id}';
     """)
     price = list(cur.fetchone()[0])
+    price = [float(i) for i in price]
     return price
 
-# company_lst = ["ast", "dsc", "fsin", "hhw", "jky", "sgo", "index"]
-company_lst = ["index"]
+company_lst = ["ast", "dsc", "fsin", "hhw", "jky", "sgo", "wrkn"]
 
 def register_bot(register_url, bot_name, initial_price):
     payload = json.dumps({
@@ -176,25 +176,56 @@ if __name__ == '__main__':
     bot1 = BotOne()
     bot2 = BotThree()
 
-    index_price = get_price_from_database("index")[60*60*10:60*60*11]
-    index_price = [float(i) for i in index_price]
-    index_price_df = pd.DataFrame(index_price, columns=["index_price"])[
-        "index_price"]
+    ast_price = get_price_from_database("ast")[60*60*10:60*60*11]
+    ast_price_df = pd.DataFrame(ast_price, columns=["price"])["price"]
+    dsc_price = get_price_from_database("dsc")[60*60*10:60*60*11]
+    dsc_price_df = pd.DataFrame(dsc_price, columns=["price"])["price"]
+    fsin_price = get_price_from_database("fsin")[60*60*10:60*60*11]
+    fsin_price_df = pd.DataFrame(fsin_price, columns=["price"])["price"]
+    hhw_price = get_price_from_database("hhw")[60*60*10:60*60*11]
+    hhw_price_df = pd.DataFrame(hhw_price, columns=["price"])["price"]
+    jky_price = get_price_from_database("jky")[60*60*10:60*60*11]
+    jky_price_df = pd.DataFrame(jky_price, columns=["price"])["price"]
+    sgo_price = get_price_from_database("sgo")[60*60*10:60*60*11]
+    sgo_price_df = pd.DataFrame(sgo_price, columns=["price"])["price"]
+    wrkn_price = get_price_from_database("wrkn")[60*60*10:60*60*11]
+    wrkn_price_df = pd.DataFrame(wrkn_price, columns=["price"])["price"]
+
     price_info = {
-        "index": index_price_df
+        "ast": ast_price_df,
+        "dsc": dsc_price_df,
+        "fsin": fsin_price_df,
+        "hhw": hhw_price_df,
+        "jky": jky_price_df,
+        "sgo": sgo_price_df,
+        "wrkn": wrkn_price_df,   
     }
+
     order_book = {
-        "index": get_active_order_book("wrkn")
+        "ast": get_active_order_book("ast"),
+        "dsc": get_active_order_book("dsc"),
+        "fsin": get_active_order_book("fsin"),
+        "hhw": get_active_order_book("hhw"),
+        "jky": get_active_order_book("jky"),
+        "sgo": get_active_order_book("sgo"),
+        "wrkn": get_active_order_book("wrkn"),
     }
 
     initial_price = {
-        "index": index_price[0]
+        "ast": ast_price[0],
+        "dsc": dsc_price[0],
+        "fsin": fsin_price[0],
+        "hhw": hhw_price[0],
+        "jky": jky_price[0],
+        "sgo": sgo_price[0],
+        "wrkn": wrkn_price[0]
     }
     register_bot("http://127.0.0.1:5000/register-bot", "MysticAdventurer", initial_price) #ma_bot
     register_bot("http://127.0.0.1:5000/register-bot", "MagicRider", initial_price) #mean_reversion_bot
     register_bot("http://127.0.0.1:5000/register-bot", "DiamondCrystal", initial_price) #donchian_bot
     register_bot("http://127.0.0.1:5000/register-bot", "MadInvestor", initial_price) #crazy_bot
-
+    register_bot("http://127.0.0.1:5000/register-bot", "Arima", initial_price) #arima_bot
+    register_bot("http://127.0.0.1:5000/register-bot", "KnightNexus", initial_price) #arima_bot
 
     for index in range(0,2):
         bot_data = {}
@@ -248,5 +279,3 @@ if __name__ == '__main__':
         else:
             print(bot_data)
             print('\n')
-        
-        time.sleep(2)

@@ -80,7 +80,7 @@ class BotOne:
 		score = 0
 		coefficient = self.stg_ma(price_info, time_stamp, st_moving_avg_period, lt_moving_avg_period)
 		if len(ordered_book) == 0:
-			pass
+			return 0, 0, 0
 		elif coefficient == 1:
 			for price_tmp in ordered_book:
 				if ordered_book[price_tmp] < 0:
@@ -125,6 +125,8 @@ class BotOne:
 		price = 0
 		share = 0
 		score = 0
+		if len(ordered_book) == 0:
+			return 0, 0, 0
 		coefficient = self.stg_momentum(price_info, volume_info, time_stamp, moving_avg_period)
 		
 		if coefficient == 1:
@@ -169,6 +171,8 @@ class BotOne:
 		price = 0
 		share = 0
 		score = 0
+		if len(ordered_book) == 0:
+			return 0, 0, 0
 		coefficient = self.stg_mean_reversion(price_info, time_stamp, n_std, moving_avg_period)
 		
 		if coefficient == 1:
@@ -213,6 +217,8 @@ class BotOne:
 		price = 0
 		share = 0
 		score = 0
+		if len(ordered_book) == 0:
+			return 0, 0, 0
 		coefficient = self.stg_donchian_breakout(price_info, moving_avg_period, time_stamp)
 		
 		if coefficient == 1:
@@ -270,8 +276,11 @@ class BotOne:
 			print("No translation should proceed. \n")
 	
 	def crazy_accepter(self, order_book):
-		price, share = random.choice(list(order_book.items()))
-		return price, share
+		if len(order_book) == 0:
+			return 0, 0
+		else:
+			price, share = random.choice(list(order_book.items()))
+			return price, share
 	
 	def crazy_trader(self):
 		coefficient = random.choice([-1, 0, 1])

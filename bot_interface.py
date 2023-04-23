@@ -64,7 +64,8 @@ def get_active_order_book(comp_name):
                 
             if index + 1 == len(buy_orders):
                     buy_order_book.update({float(price): -float(shares)})
-
+        if len(buy_orders) == 1:
+            buy_order_book.update({float(price): -float(shares)})
     cur.execute(f"""
         SELECT price, shares, RANK() OVER (ORDER BY price DESC) as rank FROM orders WHERE 
         accepted={False} AND company_name='{comp_name}' AND action='sell';
@@ -86,6 +87,8 @@ def get_active_order_book(comp_name):
                     sell_order_book.update({float(price): float(shares)})
     
     sell_order_book.update(buy_order_book)
+    if sell_order_book==OrderedDict(()):
+        sell_order_book.update({0:0})
     return sell_order_book
 
 def trader(result_queue, price_info, time_stamp, shares=10):
@@ -172,6 +175,7 @@ def bidder(result_queue, price_info, time_stamp, shares=10, split = 50):
     result_queue.put(["bidder", bidder])
 
 
+
 if __name__ == '__main__':
     bot1 = BotOne()
     bot2 = BotThree()
@@ -220,6 +224,7 @@ if __name__ == '__main__':
         "sgo": sgo_price[0],
         "wrkn": wrkn_price[0]
     }
+
     register_bot("http://127.0.0.1:5000/register-bot", "MysticAdventurer", initial_price) #ma_bot
     register_bot("http://127.0.0.1:5000/register-bot", "MagicRider", initial_price) #mean_reversion_bot
     register_bot("http://127.0.0.1:5000/register-bot", "DiamondCrystal", initial_price) #donchian_bot
@@ -270,12 +275,5 @@ if __name__ == '__main__':
             }
         
         response = requests.request("POST", "http://127.0.0.1:5000/bot-actions", data=json.dumps(bot_data))
-        if response.status_code == 401:
-            print("You do not owe enough shares of this stock.")
-        elif response.status_code == 402:
-            print("You do not have enough money for this trade")
-        elif response.status_code == 403:
-            print("Currently no shares available for trade. Your transaction will enter the pending state.")
-        else:
-            print(bot_data)
-            print('\n')
+        print(bot_data)
+        print('\n')

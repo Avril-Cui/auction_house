@@ -5,7 +5,7 @@ All bots/users have three possible actions:
     3. Accept an existing order
         - An user/bot can to the market and accept any orders
         - An user/bot can put a trade -> if it is available in the market, then goes through
-        - For a bot, when a price is passed through, it will take ALL the orders in the market
+        - For a bot, when a price is passed through, it will take ALL the orders in the market with that price
 """
 
 import psycopg2
@@ -331,6 +331,12 @@ for index in range(len(index_price)):
     current_price = index_price[time_stamp]
     order_book = get_order_book(current_price)
     price, share, score = bot.evaluator_ma_surplus_accept(index_price_df, time_stamp, order_book, st_moving_avg_period=15, lt_moving_avg_period=30)
+    trade_stock("bot_ma", bot_id, price, share, "ast")
+    trade_stock("bot_ma", bot_id, price, share, "dsc")
+    trade_stock("bot_ma", bot_id, price, share, "fsin")
+    trade_stock("bot_ma", bot_id, price, share, "hhw")
+    trade_stock("bot_ma", bot_id, price, share, "jky")
+    trade_stock("bot_ma", bot_id, price, share, "sgo")
     trade_stock("bot_ma", bot_id, price, share, "wrkn")
 
 ##accept trades

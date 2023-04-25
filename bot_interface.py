@@ -63,7 +63,7 @@ def get_active_order_book(comp_name):
                 shares = buy_orders[index][1]
                 
             if index + 1 == len(buy_orders):
-                    buy_order_book.update({float(price): -float(shares)})
+                buy_order_book.update({float(price): -float(shares)})
         if len(buy_orders) == 1:
             buy_order_book.update({float(price): -float(shares)})
     cur.execute(f"""
@@ -78,14 +78,15 @@ def get_active_order_book(comp_name):
         for index in range(1, len(sell_orders)):
             if sell_orders[index][0] == price:
                 shares += sell_orders[index][1]
-
             else:
-                sell_order_book.update({float(price), float(shares)})
+                sell_order_book.update({float(price): float(shares)})
                 price = sell_orders[index][0]
                 shares = sell_orders[index][1]
-        if index + 1 == len(sell_orders):
-                    sell_order_book.update({float(price): float(shares)})
-    
+
+            if index + 1 == len(sell_orders):
+                sell_order_book.update({float(price): float(shares)})
+        if len(sell_orders) == 1:
+            sell_order_book.update({float(price): float(shares)})
     sell_order_book.update(buy_order_book)
     if sell_order_book==OrderedDict(()):
         sell_order_book.update({0:0})
@@ -173,7 +174,6 @@ def bidder(result_queue, price_info, time_stamp, shares=10, split = 50):
 
         bidder[company] = bidder_company
     result_queue.put(["bidder", bidder])
-
 
 
 if __name__ == '__main__':

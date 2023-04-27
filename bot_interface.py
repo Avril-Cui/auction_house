@@ -175,7 +175,8 @@ def bidder(result_queue, price_info, time_stamp, shares=10, split = 50):
         bidder[company] = bidder_company
     result_queue.put(["bidder", bidder])
 
-
+start_time = time.time() - 60*60*10*10
+execute_time = time.time()
 if __name__ == '__main__':
     bot1 = BotOne()
     bot2 = BotThree()
@@ -232,7 +233,7 @@ if __name__ == '__main__':
     register_bot("http://127.0.0.1:5000/register-bot", "Arima", initial_price) #arima_bot
     register_bot("http://127.0.0.1:5000/register-bot", "KnightNexus", initial_price) #arima_bot
 
-    for index in range(len(ast_price)):
+    for index in range(int(execute_time-start_time), int(execute_time-start_time)+2):
         bot_data = {}
 
         result_queue = Queue()
@@ -277,3 +278,5 @@ if __name__ == '__main__':
         response = requests.request("POST", "http://127.0.0.1:5000/bot-actions", data=json.dumps(bot_data))
         print(bot_data)
         print('\n')
+
+        # time.sleep(3)

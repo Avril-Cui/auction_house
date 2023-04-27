@@ -251,6 +251,22 @@ class BotOne:
 		else:
 			return 0, 0, 0
 
+	def crazy_bidder(self, current_price, share_lower_limit=20, share_upper_limit=70):
+		buy_or_sell = random.choice([-1, 0, 1])
+		if buy_or_sell == 0:
+			return 0, 0
+		elif buy_or_sell == -1:
+			share = random.randint(share_lower_limit, share_upper_limit) * -1
+			price = current_price + random.choice([0.05, 0.1, 0.15, 0.2, 0.25])
+			return share, price
+		else:
+			share = random.randint(share_lower_limit, share_upper_limit) * -1
+			price = current_price + random.choice([0.05, 0.1, 0.15, 0.2, 0.25])
+			return share, price
+
+
+
+
 	def crazy_bot(self, price_info, time_stamp, ordered_book, share_lower_limit=50, share_upper_limit=200, n_std=1, moving_avg_period=30):
 		trade_or_take = random.choice([0, 1])
 

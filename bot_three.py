@@ -84,11 +84,17 @@ class BotThree:
         coefficient = predicted_signal[-1]
         return coefficient
     
-    def arima_forecaster(self, price_data):
+    def arima_forecaster(self, price_data, current_price):
         y = price_data.values
         model = ARIMA(y, order=(6, 1, 0)).fit()
         forecast = model.forecast(step=1)[0]
-        return forecast
+        if forecast > current_price:
+            return 1, forecast
+        elif forecast < current_price:
+            return -1, forecast
+        else:
+            return 0
+        # return forecast
     
     def arima_evaluator(self, price_data, current_price):
         y = price_data.values

@@ -93,7 +93,7 @@ class BotThree:
         elif forecast < current_price:
             return -1, forecast
         else:
-            return 0
+            return 0, 0
         # return forecast
     
     def arima_evaluator(self, price_data, current_price):

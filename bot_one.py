@@ -264,9 +264,6 @@ class BotOne:
 			price = current_price + random.choice([0.05, 0.1, 0.15, 0.2, 0.25])
 			return share, price
 
-
-
-
 	def crazy_bot(self, price_info, time_stamp, ordered_book, share_lower_limit=50, share_upper_limit=200, n_std=1, moving_avg_period=30):
 		trade_or_take = random.choice([0, 1])
 
@@ -304,8 +301,6 @@ class BotOne:
 	def crazy_trader(self):
 		coefficient = random.choice([-1, 0, 1])
 		return coefficient
-
-
 
 price_data = pdr.get_data_yahoo("AAPL", "2015-3-9", "2017-1-1")
 bot = BotOne()

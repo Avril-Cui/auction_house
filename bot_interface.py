@@ -24,7 +24,6 @@ conn = psycopg2.connect(
 )
 cur = conn.cursor()
 
-
 def get_price_from_database(company_id):
     cur.execute(f"""
           SELECT price_list from prices WHERE company_id='{company_id}';
@@ -163,21 +162,29 @@ def accepter(result_queue, price_info, time_stamp, order_book):
 def bidder(result_queue, price_info, time_stamp, shares=10, split = 50):
     bidder = {}
     for company in company_lst:
+        current_price = price_info[company].iloc[time_stamp]
         input_data = price_info[company][(time_stamp-split):time_stamp]
-        arima_price = bot2.arima_forecaster(input_data)
+        arima_action, arima_price = bot2.arima_forecaster(input_data, current_price)
+        crazy_shares, crazy_price = bot1.crazy_bidder(current_price)
         bidder_company = {
-            "arima_bot": {
-                "share_number": shares,
+            "Arima": {
+                "share_number": arima_action*shares,
                 "target_price": arima_price
+            },
+            "MadInvestor": {
+                "share_number": crazy_shares,
+                "target_price": crazy_price
             }
         }
 
         bidder[company] = bidder_company
     result_queue.put(["bidder", bidder])
 
-start_time = time.time() - 60*60*10*10
-execute_time = time.time()
+
 if __name__ == '__main__':
+    start_time = time.time() - 60*60*24*10
+    execute_time = time.time()
+
     bot1 = BotOne()
     bot2 = BotThree()
 
@@ -231,9 +238,12 @@ if __name__ == '__main__':
     register_bot("http://127.0.0.1:5000/register-bot", "DiamondCrystal", initial_price) #donchian_bot
     register_bot("http://127.0.0.1:5000/register-bot", "MadInvestor", initial_price) #crazy_bot
     register_bot("http://127.0.0.1:5000/register-bot", "Arima", initial_price) #arima_bot
-    register_bot("http://127.0.0.1:5000/register-bot", "KnightNexus", initial_price) #arima_bot
+    register_bot("http://127.0.0.1:5000/register-bot", "KnightNexus", initial_price) #KNN
 
-    for index in range(int(execute_time-start_time), int(execute_time-start_time)+2):
+    index = int(execute_time-start_time)
+    # each loop takes around 2.5 seconds
+    for i in range(int(execute_time-start_time), len(ast_price)):
+        begin_time = time.time()
         bot_data = {}
 
         result_queue = Queue()
@@ -268,7 +278,11 @@ if __name__ == '__main__':
         if "bidder" not in bot_data:
             bot_data["bidder"] = {
                 "index": {
-                    "arima_bot": {
+                    "Arima": {
+                        "share_number": 0,
+                        "target_price": 0
+                    },
+                    "MadInvestor": {
                         "share_number": 0,
                         "target_price": 0
                     }
@@ -278,5 +292,5 @@ if __name__ == '__main__':
         response = requests.request("POST", "http://127.0.0.1:5000/bot-actions", data=json.dumps(bot_data))
         print(bot_data)
         print('\n')
-
-        # time.sleep(3)
+        index += int(time.time()-begin_time)
+        time.sleep(3)

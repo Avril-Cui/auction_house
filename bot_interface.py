@@ -33,7 +33,7 @@ def automated_cancel_order(time_difference = 60*60*24):
     results = list(cur.fetchall())
     for result in results:
         order_id = result[0]
-        bot_id = result[1]
+        user_uid = result[1]
         price = result[2]
         shares = result[3]
         action = result[4]
@@ -229,6 +229,7 @@ def bidder(result_queue, price_info, time_stamp, shares=10, split = 50):
         current_price = price_info[company].iloc[time_stamp]
         input_data = price_info[company][(time_stamp-split):time_stamp]
         arima_action, arima_price = bot2.arima_forecaster(input_data, current_price)
+        print(arima_action*shares*arima_price)
         crazy_shares, crazy_price = bot1.crazy_bidder(current_price)
         bidder_company = {
             "Arima": {
@@ -304,10 +305,13 @@ if __name__ == '__main__':
     register_bot("http://127.0.0.1:5000/register-bot", "Arima", initial_price) #arima_bot
     register_bot("http://127.0.0.1:5000/register-bot", "KnightNexus", initial_price) #KNN
 
-    index = int(execute_time-start_time)
+    initial_index = int(time.time()-start_time)
+    index = int(time.time()-start_time)
     # each loop takes around 2.5 seconds
-    for i in range(int(execute_time-start_time), len(ast_price)):
-        automated_cancel_order()
+    # for i in range(int(execute_time-start_time), int(execute_time-start_time)+23):
+    while index <= initial_index + 20:
+        print(index)
+        # automated_cancel_order()
         automated_cancel_bot_order()
         begin_time = time.time()
         bot_data = {}
@@ -356,7 +360,9 @@ if __name__ == '__main__':
             }
         
         response = requests.request("POST", "http://127.0.0.1:5000/bot-actions", data=json.dumps(bot_data))
-        print(bot_data)
-        print('\n')
+        # print(bot_data)
+        # print('\n')
         index += int(time.time()-begin_time)
         time.sleep(3)
+    
+    print("orders canceled")

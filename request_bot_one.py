@@ -17,9 +17,9 @@ import requests
 import json
 import pandas as pd
 from collections import OrderedDict
-from pandas_datareader import data as pdr
-import yfinance as yf
-yf.pdr_override()
+# from pandas_datareader import data as pdr
+# import yfinance as yf
+# yf.pdr_override()
 
 DATABASE_HOST = os.getenv("DATABASE_HOST")
 DATABASE_USER = os.getenv("DATABASE_USER")

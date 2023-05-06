@@ -308,10 +308,9 @@ if __name__ == '__main__':
     initial_index = int(time.time()-start_time)
     index = int(time.time()-start_time)
     # each loop takes around 2.5 seconds
-    # for i in range(int(execute_time-start_time), int(execute_time-start_time)+23):
-    while index <= initial_index + 20:
-        print(index)
-        # automated_cancel_order()
+
+    while index <= initial_index + len(ast_price):
+        automated_cancel_order()
         automated_cancel_bot_order()
         begin_time = time.time()
         bot_data = {}
@@ -360,8 +359,6 @@ if __name__ == '__main__':
             }
         
         response = requests.request("POST", "http://127.0.0.1:5000/bot-actions", data=json.dumps(bot_data))
-        # print(bot_data)
-        # print('\n')
         index += int(time.time()-begin_time)
         time.sleep(3)
     

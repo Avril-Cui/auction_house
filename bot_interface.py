@@ -24,6 +24,70 @@ conn = psycopg2.connect(
 )
 cur = conn.cursor()
 
+def automated_cancel_order(time_difference = 60*60*24):
+    current_time = time.time()
+    cur.execute(f"""
+        SELECT order_id, user_uid, price, shares, action, company_name FROM orders 
+        WHERE {current_time}-timestamp > {time_difference} AND accepted={False};
+    """)
+    results = list(cur.fetchall())
+    for result in results:
+        order_id = result[0]
+        bot_id = result[1]
+        price = result[2]
+        shares = result[3]
+        action = result[4]
+        company_name = result[5]
+        trade_value = price * shares
+        cur.execute(f"""
+            DELETE FROM orders WHERE order_id='{order_id}';
+        """)
+        conn.commit()
+        if action == "buy":
+            cur.execute(f"""
+                UPDATE users SET cashvalue = (cashvalue+{round(trade_value, 2)})
+                WHERE uid='{user_uid}';
+            """)
+            conn.commit()
+        elif action == "sell":
+            cur.execute(f"""
+                UPDATE portfolio SET pending_shares_holding = (pending_shares_holding+{round(shares,2)})
+                WHERE uid='{user_uid}' and company_id='{company_name}';
+            """)
+            conn.commit()
+
+def automated_cancel_bot_order(time_difference = 21):
+    current_time = time.time()
+    cur.execute(f"""
+        SELECT order_id, bot_id, price, shares, action, company_name FROM bot_orders 
+        WHERE {current_time}-timestamp > {time_difference} AND accepted={False};
+    """)
+    results = list(cur.fetchall())
+    for result in results:
+        order_id = result[0]
+        bot_id = result[1]
+        price = result[2]
+        shares = result[3]
+        action = result[4]
+        company_name = result[5]
+        trade_value = price * shares
+        cur.execute(f"""
+            DELETE FROM bot_orders WHERE order_id='{order_id}';
+        """)
+        conn.commit()
+        if action == "buy":
+            cur.execute(f"""
+                UPDATE bots SET cashvalue = (cashvalue+{round(trade_value, 2)})
+                WHERE bot_id='{bot_id}';
+            """)
+            conn.commit()
+        elif action == "sell":
+            cur.execute(f"""
+                UPDATE bot_portfolio SET pending_shares_holding = (pending_shares_holding+{round(shares,2)})
+                WHERE bot_id='{bot_id}' and company_id='{company_name}';
+            """)
+            conn.commit()
+
 def get_price_from_database(company_id):
     cur.execute(f"""
           SELECT price_list from prices WHERE company_id='{company_id}';
@@ -243,6 +307,8 @@ if __name__ == '__main__':
     index = int(execute_time-start_time)
     # each loop takes around 2.5 seconds
     for i in range(int(execute_time-start_time), len(ast_price)):
+        automated_cancel_order()
+        automated_cancel_bot_order()
         begin_time = time.time()
         bot_data = {}
 

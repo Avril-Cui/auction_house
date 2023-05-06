@@ -8,7 +8,7 @@ from collections import OrderedDict
 from queue import Queue
 from threading import Thread
 from dotenv import load_dotenv
-import jsons
+import json
 import requests
 load_dotenv()
 DATABASE_HOST = os.getenv("DATABASE_HOST")

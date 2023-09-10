@@ -83,24 +83,30 @@ class BotOne:
 			return 0, 0, 0
 		elif coefficient == 1:
 			for price_tmp in ordered_book:
-				if ordered_book[price_tmp] < 0:
-					index = list(ordered_book.keys()).index(price_tmp)
-					score_tmp = self.stg_surplus(index) * coefficient
-					if abs(score_tmp) > score:
-						score = abs(score_tmp)
-						share = ordered_book[price_tmp]
-						price = price_tmp
+				if abs(price_tmp-price_info.iloc[time_stamp])/price_info.iloc[time_stamp] > 0.01:
+					return 0,0,0
+				else:
+					if ordered_book[price_tmp] < 0:
+						index = list(ordered_book.keys()).index(price_tmp)
+						score_tmp = self.stg_surplus(index) * coefficient
+						if abs(score_tmp) > score:
+							score = abs(score_tmp)
+							share = ordered_book[price_tmp]
+							price = price_tmp
 		elif coefficient == -1:
 			for price_tmp in ordered_book:
-				if ordered_book[price_tmp] > 0:
-					price_list = list(ordered_book.keys())
-					price_list.reverse()
-					index = price_list.index(price_tmp)
-					score_tmp = self.stg_surplus(index) * coefficient
-					if abs(score_tmp) > score:
-						score = abs(score_tmp)
-						share = ordered_book[price_tmp]
-						price = price_tmp
+				if abs(price_tmp-price_info.iloc[time_stamp])/price_info.iloc[time_stamp] > 0.01:
+					return 0,0,0
+				else:
+					if ordered_book[price_tmp] > 0:
+						price_list = list(ordered_book.keys())
+						price_list.reverse()
+						index = price_list.index(price_tmp)
+						score_tmp = self.stg_surplus(index) * coefficient
+						if abs(score_tmp) > score:
+							score = abs(score_tmp)
+							share = ordered_book[price_tmp]
+							price = price_tmp
 		
 		if score > 0:
 			print(f"Highest absolute score is {abs(score)}. Bot buys at ${price} for {abs(share)} shares. \n")
@@ -131,24 +137,30 @@ class BotOne:
 		
 		if coefficient == 1:
 			for price_tmp in ordered_book:
-				if ordered_book[price_tmp] < 0:
-					index = list(ordered_book.keys()).index(price_tmp)
-					score_tmp = self.stg_surplus(index) * coefficient
-					if abs(score_tmp) > score:
-						score = abs(score_tmp)
-						share = ordered_book[price_tmp]
-						price = price_tmp
+				if abs(price_tmp-price_info.iloc[time_stamp])/price_info.iloc[time_stamp] > 0.01:
+					return 0,0,0
+				else:
+					if ordered_book[price_tmp] < 0:
+						index = list(ordered_book.keys()).index(price_tmp)
+						score_tmp = self.stg_surplus(index) * coefficient
+						if abs(score_tmp) > score:
+							score = abs(score_tmp)
+							share = ordered_book[price_tmp]
+							price = price_tmp
 		elif coefficient == -1:
 			for price_tmp in ordered_book:
-				if ordered_book[price_tmp] > 0:
-					price_list = list(ordered_book.keys())
-					price_list.reverse()
-					index = price_list.index(price_tmp)
-					score_tmp = self.stg_surplus(index) * coefficient
-					if abs(score_tmp) > score:
-						score = abs(score_tmp)
-						share = ordered_book[price_tmp]
-						price = price_tmp
+				if abs(price_tmp-price_info.iloc[time_stamp])/price_info.iloc[time_stamp] > 0.01:
+					return 0,0,0
+				else:
+					if ordered_book[price_tmp] > 0:
+						price_list = list(ordered_book.keys())
+						price_list.reverse()
+						index = price_list.index(price_tmp)
+						score_tmp = self.stg_surplus(index) * coefficient
+						if abs(score_tmp) > score:
+							score = abs(score_tmp)
+							share = ordered_book[price_tmp]
+							price = price_tmp
 		
 		if score > 0:
 			print(f"Highest absolute score is {abs(score)}. Bot buys at ${price} for {abs(share)} shares. \n")
@@ -177,25 +189,31 @@ class BotOne:
 		
 		if coefficient == 1:
 			for price_tmp in ordered_book:
-				if ordered_book[price_tmp] < 0:
-					index = list(ordered_book.keys()).index(price_tmp)
-					score_tmp = self.stg_surplus(index) * coefficient
-					if abs(score_tmp) > score:
-						score = abs(score_tmp)
-						share = ordered_book[price_tmp]
-						price = price_tmp
+				if abs(price_tmp-price_info.iloc[time_stamp])/price_info.iloc[time_stamp] > 0.01:
+					return 0,0,0
+				else:
+					if ordered_book[price_tmp] < 0:
+						index = list(ordered_book.keys()).index(price_tmp)
+						score_tmp = self.stg_surplus(index) * coefficient
+						if abs(score_tmp) > score:
+							score = abs(score_tmp)
+							share = ordered_book[price_tmp]
+							price = price_tmp
 		elif coefficient == -1:
 			for price_tmp in ordered_book:
-				if ordered_book[price_tmp] > 0:
-					price_list = list(ordered_book.keys())
-					price_list.reverse()
-					index = price_list.index(price_tmp)
-					score_tmp = self.stg_surplus(index) * coefficient
-					if abs(score_tmp) > score:
-						score = abs(score_tmp)
-						share = ordered_book[price_tmp]
-						price = price_tmp
-		
+				if abs(price_tmp-price_info.iloc[time_stamp])/price_info.iloc[time_stamp] > 0.01:
+					return 0,0,0
+				else:
+					if ordered_book[price_tmp] > 0:
+						price_list = list(ordered_book.keys())
+						price_list.reverse()
+						index = price_list.index(price_tmp)
+						score_tmp = self.stg_surplus(index) * coefficient
+						if abs(score_tmp) > score:
+							score = abs(score_tmp)
+							share = ordered_book[price_tmp]
+							price = price_tmp
+			
 		if score > 0:
 			print(f"Highest absolute score is {abs(score)}. Bot buys at ${price} for {abs(share)} shares. \n")
 			return price, share, score
@@ -223,24 +241,30 @@ class BotOne:
 		
 		if coefficient == 1:
 			for price_tmp in ordered_book:
-				if ordered_book[price_tmp] < 0:
-					index = list(ordered_book.keys()).index(price_tmp)
-					score_tmp = self.stg_surplus(index) * coefficient
-					if abs(score_tmp) > score:
-						score = abs(score_tmp)
-						share = ordered_book[price_tmp]
-						price = price_tmp
+				if abs(price_tmp-price_info.iloc[time_stamp])/price_info.iloc[time_stamp] > 0.01:
+					return 0,0,0
+				else:
+					if ordered_book[price_tmp] < 0:
+						index = list(ordered_book.keys()).index(price_tmp)
+						score_tmp = self.stg_surplus(index) * coefficient
+						if abs(score_tmp) > score:
+							score = abs(score_tmp)
+							share = ordered_book[price_tmp]
+							price = price_tmp
 		elif coefficient == -1:
 			for price_tmp in ordered_book:
-				if ordered_book[price_tmp] > 0:
-					price_list = list(ordered_book.keys())
-					price_list.reverse()
-					index = price_list.index(price_tmp)
-					score_tmp = self.stg_surplus(index) * coefficient
-					if abs(score_tmp) > score:
-						score = abs(score_tmp)
-						share = ordered_book[price_tmp]
-						price = price_tmp
+				if abs(price_tmp-price_info.iloc[time_stamp])/price_info.iloc[time_stamp] > 0.01:
+					return 0,0,0
+				else:
+					if ordered_book[price_tmp] > 0:
+						price_list = list(ordered_book.keys())
+						price_list.reverse()
+						index = price_list.index(price_tmp)
+						score_tmp = self.stg_surplus(index) * coefficient
+						if abs(score_tmp) > score:
+							score = abs(score_tmp)
+							share = ordered_book[price_tmp]
+							price = price_tmp
 		
 		if score > 0:
 			print(f"Highest absolute score is {abs(score)}. Bot buys at ${price} for {abs(share)} shares. \n")

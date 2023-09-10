@@ -15,24 +15,24 @@ from sklearn.svm import SVC
 from statsmodels.tsa.arima.model import ARIMA
 import matplotlib.pyplot as plt
 
-import psycopg2
-conn = psycopg2.connect(
-    host="localhost",
-    database="aspectdatabase",
-    user="postgres",
-    password="Xiaokeai0717"
-)
-cur = conn.cursor()
+# import psycopg2
+# conn = psycopg2.connect(
+#     host="localhost",
+#     database="aspectdatabase",
+#     user="postgres",
+#     password="Xiaokeai0717"
+# )
+# cur = conn.cursor()
 
-def get_price_from_database(company_id):
-	cur.execute(f"""
-          SELECT price_list from test_prices WHERE company_id='{company_id}';
-    """)
-	price = list(cur.fetchone()[0])
-	return price
+# def get_price_from_database(company_id):
+# 	cur.execute(f"""
+#           SELECT price_list from test_prices WHERE company_id='{company_id}';
+#     """)
+# 	price = list(cur.fetchone()[0])
+# 	return price
 
-index_price = get_price_from_database("index")[60*60*11:60*60*11+60*60]
-index_price = [float(i) for i in index_price]
+# index_price = get_price_from_database("index")[60*60*11:60*60*11+60*60]
+# index_price = [float(i) for i in index_price]
 
 class BotThree:
     """

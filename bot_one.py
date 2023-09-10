@@ -276,7 +276,7 @@ class BotOne:
 			return 0, 0, 0
 
 	def crazy_bidder(self, current_price, share_lower_limit=20, share_upper_limit=70):
-		buy_or_sell = random.choice([-1, 0, 1])
+		buy_or_sell = random.choice([-1, 0, 0, 0, 0, 0, 0, 1])
 		if buy_or_sell == 0:
 			return 0, 0
 		elif buy_or_sell == -1:
@@ -313,7 +313,7 @@ class BotOne:
 			print("No translation should proceed. \n")
 	
 	def crazy_accepter(self, order_book):
-		action = random.choice([0, 1])
+		action = random.choice([0, 0, 0, 0, 0, 0, 0, 1])
 		if len(order_book) == 0:
 			return 0, 0
 		elif action == 1:
@@ -323,11 +323,11 @@ class BotOne:
 			return 0,0
 	
 	def crazy_trader(self):
-		coefficient = random.choice([-1, 0, 1])
+		coefficient = random.choice([-1, 0, 0, 0,  1])
 		return coefficient
 
-price_data = pdr.get_data_yahoo("AAPL", "2015-3-9", "2017-1-1")
-bot = BotOne()
+# price_data = pdr.get_data_yahoo("AAPL", "2015-3-9", "2017-1-1")
+# bot = BotOne()
 
 ###Bot One
 # time_stamp = 287

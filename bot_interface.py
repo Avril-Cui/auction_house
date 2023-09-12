@@ -24,7 +24,8 @@ conn = psycopg2.connect(
 )
 cur = conn.cursor()
 
-def automated_cancel_order(time_difference = 60*60*24):
+
+def automated_cancel_order(time_difference=60*60*24):
     current_time = time.time()
     cur.execute(f"""
         SELECT order_id, user_uid, price, shares, action, company_name FROM orders 
@@ -56,37 +57,41 @@ def automated_cancel_order(time_difference = 60*60*24):
             """)
             conn.commit()
 
-def automated_cancel_bot_order(time_difference = 21):
+
+def automated_cancel_bot_order(time_difference=12):
     current_time = time.time()
     cur.execute(f"""
         SELECT order_id, bot_id, price, shares, action, company_name FROM bot_orders 
         WHERE {current_time}-timestamp > {time_difference} AND accepted={False};
     """)
     results = list(cur.fetchall())
-    for result in results:
-        order_id = result[0]
-        bot_id = result[1]
-        price = result[2]
-        shares = result[3]
-        action = result[4]
-        company_name = result[5]
-        trade_value = price * shares
-        cur.execute(f"""
-            DELETE FROM bot_orders WHERE order_id='{order_id}';
-        """)
-        conn.commit()
-        if action == "buy":
+    if len(results) != 0:
+        print(f"canceling {len(results)} results")
+        for result in results:
+            order_id = result[0]
+            bot_id = result[1]
+            price = result[2]
+            shares = result[3]
+            action = result[4]
+            company_name = result[5]
+            trade_value = price * shares
             cur.execute(f"""
-                UPDATE bots SET cashvalue = (cashvalue+{round(trade_value, 2)})
-                WHERE bot_id='{bot_id}';
+                DELETE FROM bot_orders WHERE order_id='{order_id}';
             """)
             conn.commit()
-        elif action == "sell":
-            cur.execute(f"""
-                UPDATE bot_portfolio SET pending_shares_holding = (pending_shares_holding+{round(shares,2)})
-                WHERE bot_id='{bot_id}' and company_id='{company_name}';
-            """)
-            conn.commit()
+            if action == "buy":
+                cur.execute(f"""
+                    UPDATE bots SET cashvalue = (cashvalue+{round(trade_value, 2)})
+                    WHERE bot_id='{bot_id}';
+                """)
+                conn.commit()
+            elif action == "sell":
+                cur.execute(f"""
+                    UPDATE bot_portfolio SET pending_shares_holding = (pending_shares_holding+{round(shares,2)})
+                    WHERE bot_id='{bot_id}' and company_id='{company_name}';
+                """)
+                conn.commit()
+
 
 def get_price_from_database(company_id):
     cur.execute(f"""
@@ -96,7 +101,9 @@ def get_price_from_database(company_id):
     price = [float(i) for i in price]
     return price
 
+
 company_lst = ["ast", "dsc", "fsin", "hhw", "jky", "sgo", "wrkn"]
+
 
 def register_bot(register_url, bot_name, initial_price):
     payload = json.dumps({
@@ -106,8 +113,9 @@ def register_bot(register_url, bot_name, initial_price):
     response = requests.request("POST", register_url, data=payload)
     print(response.status_code)
 
+
 def get_active_order_book(comp_name):
-    ### get all buy orders from ranked from high to low
+    # get all buy orders from ranked from high to low
     cur.execute(f"""
         SELECT price, shares, RANK() OVER (ORDER BY price DESC) as rank FROM orders WHERE 
         accepted={False} AND company_name='{comp_name}' AND action='buy';
@@ -124,7 +132,7 @@ def get_active_order_book(comp_name):
                 buy_order_book.update({float(price): -float(shares)})
                 price = buy_orders[index][0]
                 shares = buy_orders[index][1]
-                
+
             if index + 1 == len(buy_orders):
                 buy_order_book.update({float(price): -float(shares)})
         if len(buy_orders) == 1:
@@ -151,9 +159,10 @@ def get_active_order_book(comp_name):
         if len(sell_orders) == 1:
             sell_order_book.update({float(price): float(shares)})
     sell_order_book.update(buy_order_book)
-    if sell_order_book==OrderedDict(()):
-        sell_order_book.update({0:0})
+    if sell_order_book == OrderedDict(()):
+        sell_order_book.update({0: 0})
     return sell_order_book
+
 
 def trader(result_queue, price_info, time_stamp, shares=10):
     trade = {}
@@ -189,6 +198,7 @@ def trader(result_queue, price_info, time_stamp, shares=10):
 
     result_queue.put(["trader", trade])
 
+
 def accepter(result_queue, price_info, time_stamp, order_book):
     accept = {}
     for company in company_lst:
@@ -223,13 +233,14 @@ def accepter(result_queue, price_info, time_stamp, order_book):
         accept[company] = accept_company
     result_queue.put(["accepter", accept])
 
-def bidder(result_queue, price_info, time_stamp, shares=10, split = 50):
+
+def bidder(result_queue, price_info, time_stamp, shares=10, split=50):
     bidder = {}
     for company in company_lst:
         current_price = price_info[company].iloc[time_stamp]
         input_data = price_info[company][(time_stamp-split):time_stamp]
-        arima_action, arima_price = bot2.arima_forecaster(input_data, current_price)
-        print(arima_action*shares*arima_price)
+        arima_action, arima_price = bot2.arima_forecaster(
+            input_data, current_price)
         crazy_shares, crazy_price = bot1.crazy_bidder(current_price)
         bidder_company = {
             "Arima": {
@@ -243,11 +254,12 @@ def bidder(result_queue, price_info, time_stamp, shares=10, split = 50):
         }
 
         bidder[company] = bidder_company
+    print(f"bidder: {bidder}")
     result_queue.put(["bidder", bidder])
 
 
 if __name__ == '__main__':
-    start_time = time.time() - 60*60*24*10
+    start_time = time.time() - 60*60*24*10 - 60*60*2
     execute_time = time.time()
 
     bot1 = BotOne()
@@ -275,7 +287,7 @@ if __name__ == '__main__':
         "hhw": hhw_price_df,
         "jky": jky_price_df,
         "sgo": sgo_price_df,
-        "wrkn": wrkn_price_df,   
+        "wrkn": wrkn_price_df,
     }
 
     order_book = {
@@ -298,20 +310,25 @@ if __name__ == '__main__':
         "wrkn": wrkn_price[0]
     }
 
-    register_bot("http://127.0.0.1:5000/register-bot", "MysticAdventurer", initial_price) #ma_bot
-    register_bot("http://127.0.0.1:5000/register-bot", "MagicRider", initial_price) #mean_reversion_bot
-    register_bot("http://127.0.0.1:5000/register-bot", "DiamondCrystal", initial_price) #donchian_bot
-    register_bot("http://127.0.0.1:5000/register-bot", "MadInvestor", initial_price) #crazy_bot
-    register_bot("http://127.0.0.1:5000/register-bot", "Arima", initial_price) #arima_bot
-    register_bot("http://127.0.0.1:5000/register-bot", "KnightNexus", initial_price) #KNN
+    register_bot("http://127.0.0.1:5000/register-bot",
+                 "MysticAdventurer", initial_price)  # ma_bot
+    register_bot("http://127.0.0.1:5000/register-bot",
+                 "MagicRider", initial_price)  # mean_reversion_bot
+    register_bot("http://127.0.0.1:5000/register-bot",
+                 "DiamondCrystal", initial_price)  # donchian_bot
+    register_bot("http://127.0.0.1:5000/register-bot",
+                 "MadInvestor", initial_price)  # crazy_bot
+    register_bot("http://127.0.0.1:5000/register-bot",
+                 "Arima", initial_price)  # arima_bot
+    register_bot("http://127.0.0.1:5000/register-bot",
+                 "KnightNexus", initial_price)  # KNN
 
     initial_index = int(time.time()-start_time)
     index = int(time.time()-start_time)
     # each loop takes around 2.5 seconds
 
     while index <= initial_index + len(ast_price):
-        automated_cancel_order()
-        automated_cancel_bot_order()
+        # automated_cancel_order()
         begin_time = time.time()
         bot_data = {}
 
@@ -319,9 +336,13 @@ if __name__ == '__main__':
         time_stamp = index
         split = 50
         if time_stamp >= split:
-            t1 = Thread(target=trader, args=(result_queue, price_info, time_stamp))
-            t2 = Thread(target=accepter, args=(result_queue, price_info, time_stamp, order_book))
-            t3 = Thread(target=bidder, args=(result_queue, price_info, time_stamp))
+            # automated_cancel_bot_order()
+            t1 = Thread(target=trader, args=(
+                result_queue, price_info, time_stamp))
+            t2 = Thread(target=accepter, args=(
+                result_queue, price_info, time_stamp, order_book))
+            t3 = Thread(target=bidder, args=(
+                result_queue, price_info, time_stamp))
 
             t1.start()
             t2.start()
@@ -331,8 +352,10 @@ if __name__ == '__main__':
             t2.join()
             t3.join()
         else:
-            t1 = Thread(target=trader, args=(result_queue, price_info, time_stamp))
-            t2 = Thread(target=accepter, args=(result_queue, price_info, time_stamp, order_book))
+            t1 = Thread(target=trader, args=(
+                result_queue, price_info, time_stamp))
+            t2 = Thread(target=accepter, args=(
+                result_queue, price_info, time_stamp, order_book))
 
             t1.start()
             t2.start()
@@ -343,7 +366,7 @@ if __name__ == '__main__':
         while not result_queue.empty():
             result = result_queue.get()
             bot_data[result[0]] = result[1]
-        
+
         if "bidder" not in bot_data:
             bot_data["bidder"] = {
                 "index": {
@@ -357,9 +380,11 @@ if __name__ == '__main__':
                     }
                 }
             }
-        
-        response = requests.request("POST", "http://127.0.0.1:5000/bot-actions", data=json.dumps(bot_data))
+        print(f"requesting: {bot_data}")
+
+        response = requests.request(
+            "POST", "http://127.0.0.1:5000/bot-actions", data=json.dumps(bot_data))
         index += int(time.time()-begin_time)
         time.sleep(3)
-    
+
     print("orders canceled")

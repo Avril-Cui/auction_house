@@ -234,7 +234,7 @@ def accepter(result_queue, price_info, time_stamp, order_book):
     result_queue.put(["accepter", accept])
 
 
-def bidder(result_queue, price_info, time_stamp, shares=10, split=50):
+def bidder(result_queue, price_info, time_stamp, shares=50, split=50):
     bidder = {}
     for company in company_lst:
         current_price = price_info[company].iloc[time_stamp]
@@ -329,6 +329,7 @@ if __name__ == '__main__':
 
     while index <= initial_index + len(ast_price):
         # automated_cancel_order()
+        automated_cancel_bot_order()
         begin_time = time.time()
         bot_data = {}
 
@@ -336,7 +337,6 @@ if __name__ == '__main__':
         time_stamp = index
         split = 50
         if time_stamp >= split:
-            # automated_cancel_bot_order()
             t1 = Thread(target=trader, args=(
                 result_queue, price_info, time_stamp))
             t2 = Thread(target=accepter, args=(
@@ -380,7 +380,7 @@ if __name__ == '__main__':
                     }
                 }
             }
-        print(f"requesting: {bot_data}")
+        print(f"requesting: {bot_data['bidder']}")
 
         response = requests.request(
             "POST", "http://127.0.0.1:5000/bot-actions", data=json.dumps(bot_data))

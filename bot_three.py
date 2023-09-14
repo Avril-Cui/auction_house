@@ -107,8 +107,6 @@ class BotThree:
             return -1
         else:
             return 0
-    
-
 
 # bot = BotThree() 
 # price_data = pdr.get_data_yahoo("AAPL", "2021-1-1", "2023-1-1")

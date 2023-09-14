@@ -58,7 +58,7 @@ def automated_cancel_order(time_difference=60*60*24):
             conn.commit()
 
 
-def automated_cancel_bot_order(time_difference=12):
+def automated_cancel_bot_order(time_difference=18):
     current_time = time.time()
     cur.execute(f"""
         SELECT order_id, bot_id, price, shares, action, company_name FROM bot_orders 
@@ -99,8 +99,8 @@ def get_price_from_database(company_id):
     """)
     price = list(cur.fetchone()[0])
     price = [float(i) for i in price]
+    print(price[0])
     return price
-
 
 company_lst = ["ast", "dsc", "fsin", "hhw", "jky", "sgo", "wrkn"]
 
@@ -241,6 +241,7 @@ def bidder(result_queue, price_info, time_stamp, shares=50, split=50):
         input_data = price_info[company][(time_stamp-split):time_stamp]
         arima_action, arima_price = bot2.arima_forecaster(
             input_data, current_price)
+        print(arima_price, current_price)
         crazy_shares, crazy_price = bot1.crazy_bidder(current_price)
         bidder_company = {
             "Arima": {
@@ -254,7 +255,6 @@ def bidder(result_queue, price_info, time_stamp, shares=50, split=50):
         }
 
         bidder[company] = bidder_company
-    print(f"bidder: {bidder}")
     result_queue.put(["bidder", bidder])
 
 
@@ -323,13 +323,12 @@ if __name__ == '__main__':
     register_bot("http://127.0.0.1:5000/register-bot",
                  "KnightNexus", initial_price)  # KNN
 
-    initial_index = int(time.time()-start_time)
+    # initial_index = int(time.time()-start_time)
     index = int(time.time()-start_time)
     # each loop takes around 2.5 seconds
 
-    while index <= initial_index + len(ast_price):
+    while index <= len(ast_price):
         # automated_cancel_order()
-        automated_cancel_bot_order()
         begin_time = time.time()
         bot_data = {}
 
@@ -337,6 +336,7 @@ if __name__ == '__main__':
         time_stamp = index
         split = 50
         if time_stamp >= split:
+            automated_cancel_bot_order()
             t1 = Thread(target=trader, args=(
                 result_queue, price_info, time_stamp))
             t2 = Thread(target=accepter, args=(
@@ -385,6 +385,6 @@ if __name__ == '__main__':
         response = requests.request(
             "POST", "http://127.0.0.1:5000/bot-actions", data=json.dumps(bot_data))
         index += int(time.time()-begin_time)
-        time.sleep(3)
+        time.sleep(1)
 
     print("orders canceled")

@@ -5,8 +5,8 @@ Aspect is an educational website that gamifies the process of learning finance. 
 In the Aspect stock market, all stocks and the indices are virtual, with characteristics resembling the real-world. One interesting trait of the Aspect stock market is that there is always some intense financial events happening to the market and each individual companies. Through gaming, users could learn how to correctly and rationally make investment strategies when facing major opportunities or risks.
 
 ## Auction House and Bots
-Contary to stock simulations currently available in the market, in the Aspect stock market, users have influences on the stock prices.
-Through puting buy or sell orders in the auction house, users' demands and supplies affect the equilibrium prices.
+Contrary to stock simulations currently available in the market, in the Aspect stock market, users have influences on the stock prices.
+Through putting buy or sell orders in the auction house, users' demands and supplies affect the equilibrium prices.
 Besides users, there are trading bots present in the stock market constantly buying and selling. Each instance of the trading bot has an unique trading
 strategy that either mocks a type of investor or implemented a statistical learning model.
 

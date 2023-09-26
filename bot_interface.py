@@ -25,6 +25,50 @@ conn = psycopg2.connect(
 cur = conn.cursor()
 
 
+def sell_all_holdings():
+    cur.execute(f"""
+        SELECT uid, cost FROM portfolio;
+    """)
+    results = list(cur.fetchall())
+    print(results)
+    for i in range(len(results)):
+        cur.execute(f"""
+            UPDATE users SET cashvalue = (cashvalue+{round(results[i][1], 2)})
+            WHERE uid='{results[i][0]}';
+        """)
+        conn.commit()
+
+def cancel_all_orders():
+    cur.execute(f"""
+        SELECT order_id, user_uid, price, shares, action, company_name FROM orders 
+        WHERE accepted={False};
+    """)
+    results = list(cur.fetchall())
+    for result in results:
+        order_id = result[0]
+        user_uid = result[1]
+        price = result[2]
+        shares = result[3]
+        action = result[4]
+        company_name = result[5]
+        trade_value = price * shares
+        cur.execute(f"""
+            DELETE FROM orders WHERE order_id='{order_id}';
+        """)
+        conn.commit()
+        if action == "buy":
+            cur.execute(f"""
+                UPDATE users SET cashvalue = (cashvalue+{round(trade_value, 2)})
+                WHERE uid='{user_uid}';
+            """)
+            conn.commit()
+        elif action == "sell":
+            cur.execute(f"""
+                UPDATE portfolio SET pending_shares_holding = (pending_shares_holding+{round(shares,2)})
+                WHERE uid='{user_uid}' and company_id='{company_name}';
+            """)
+            conn.commit()
+
 def automated_cancel_order(time_difference=60*60*24):
     current_time = time.time()
     cur.execute(f"""
@@ -101,6 +145,7 @@ def get_price_from_database(company_id):
     price = [float(i) for i in price]
     print(price[0])
     return price
+
 
 company_lst = ["ast", "dsc", "fsin", "hhw", "jky", "sgo", "wrkn"]
 
@@ -259,8 +304,7 @@ def bidder(result_queue, price_info, time_stamp, shares=50, split=50):
 
 
 if __name__ == '__main__':
-    start_time = time.time() - 60*60*24*10 - 60*60*2
-    execute_time = time.time()
+    start_time = time.time() - 60*60*24*17
 
     bot1 = BotOne()
     bot2 = BotThree()
@@ -310,18 +354,18 @@ if __name__ == '__main__':
         "wrkn": wrkn_price[0]
     }
 
-    register_bot("http://127.0.0.1:5000/register-bot",
-                 "MysticAdventurer", initial_price)  # ma_bot
-    register_bot("http://127.0.0.1:5000/register-bot",
-                 "MagicRider", initial_price)  # mean_reversion_bot
-    register_bot("http://127.0.0.1:5000/register-bot",
-                 "DiamondCrystal", initial_price)  # donchian_bot
-    register_bot("http://127.0.0.1:5000/register-bot",
-                 "MadInvestor", initial_price)  # crazy_bot
-    register_bot("http://127.0.0.1:5000/register-bot",
-                 "Arima", initial_price)  # arima_bot
-    register_bot("http://127.0.0.1:5000/register-bot",
-                 "KnightNexus", initial_price)  # KNN
+    # register_bot("http://127.0.0.1:5000/register-bot",
+    #              "MysticAdventurer", initial_price)  # ma_bot
+    # register_bot("http://127.0.0.1:5000/register-bot",
+    #              "MagicRider", initial_price)  # mean_reversion_bot
+    # register_bot("http://127.0.0.1:5000/register-bot",
+    #              "DiamondCrystal", initial_price)  # donchian_bot
+    # register_bot("http://127.0.0.1:5000/register-bot",
+    #              "MadInvestor", initial_price)  # crazy_bot
+    # register_bot("http://127.0.0.1:5000/register-bot",
+    #              "Arima", initial_price)  # arima_bot
+    # register_bot("http://127.0.0.1:5000/register-bot",
+    #              "KnightNexus", initial_price)  # KNN
 
     # initial_index = int(time.time()-start_time)
     index = int(time.time()-start_time)
@@ -337,6 +381,7 @@ if __name__ == '__main__':
         split = 50
         if time_stamp >= split:
             automated_cancel_bot_order()
+            automated_cancel_order()
             t1 = Thread(target=trader, args=(
                 result_queue, price_info, time_stamp))
             t2 = Thread(target=accepter, args=(
@@ -387,4 +432,6 @@ if __name__ == '__main__':
         index += int(time.time()-begin_time)
         time.sleep(1)
 
+    cancel_all_orders()
+    sell_all_holdings()
     print("orders canceled")

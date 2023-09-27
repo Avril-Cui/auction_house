@@ -303,7 +303,7 @@ def bidder(result_queue, price_info, time_stamp, shares=50, split=50):
 
 
 if __name__ == '__main__':
-    start_time = time.time() - 60*60*24*10
+    start_time = 1695600000
 
     bot1 = BotOne()
     bot2 = BotThree()

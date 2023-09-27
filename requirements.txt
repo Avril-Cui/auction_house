@@ -12,5 +12,4 @@ pandas_datareader
 yfinance
 gunicorn
 python-dotenv
-threading
 scikit-learn

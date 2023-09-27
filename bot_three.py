@@ -1,16 +1,12 @@
-from collections import OrderedDict
-from tracemalloc import start
 import pandas as pd
 pd.options.mode.chained_assignment = None
 import numpy as np
-import random
 from pandas_datareader import data as pdr
 import yfinance as yf
 yf.pdr_override()
 import warnings
 warnings.filterwarnings("ignore")
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.metrics import accuracy_score
 from sklearn.svm import SVC
 from statsmodels.tsa.arima.model import ARIMA
 import matplotlib.pyplot as plt
@@ -80,7 +76,6 @@ class BotThree:
         x_data = pd.DataFrame([current_price-last_price], columns=["diff"])
         X = x_data[["diff"]]
         predicted_signal = model.predict(X)
-
         coefficient = predicted_signal[-1]
         return coefficient
     

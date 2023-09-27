@@ -1,0 +1,17 @@
+flask==2.2.2
+werkzeug==2.2.2
+uuid==1.30
+datetime==4.7
+numpy
+scikit-learn
+pandas
+pycryptodome
+pyrebase4
+psycopg2-binary
+pandas_datareader
+yfinance
+gunicorn
+python-dotenv
+collections
+threading
+scikit-learn

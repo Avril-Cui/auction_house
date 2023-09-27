@@ -1,4 +1,3 @@
-from collections import OrderedDict
 import random
 from pandas_datareader import data as pdr
 import yfinance as yf
@@ -9,7 +8,7 @@ class BotOne:
 	def __init__(self) -> None:
 		pass
 
-	def stg_ma(self, price_info, time_stamp, st_moving_avg_period=15, lt_moving_avg_period=30):
+	def stg_ma(self, price_info, time_stamp, st_moving_avg_period=10, lt_moving_avg_period=30):
 		st_moving_avg = price_info.rolling(
 			window=st_moving_avg_period).mean().to_list()
 		lt_moving_avg = price_info.rolling(
@@ -83,7 +82,7 @@ class BotOne:
 			return 0, 0, 0
 		elif coefficient == 1:
 			for price_tmp in ordered_book:
-				if abs(price_tmp-price_info.iloc[time_stamp])/price_info.iloc[time_stamp] > 0.01:
+				if abs(price_tmp-price_info.iloc[time_stamp])/price_info.iloc[time_stamp] > 0.02:
 					return 0,0,0
 				else:
 					if ordered_book[price_tmp] < 0:
@@ -95,7 +94,7 @@ class BotOne:
 							price = price_tmp
 		elif coefficient == -1:
 			for price_tmp in ordered_book:
-				if abs(price_tmp-price_info.iloc[time_stamp])/price_info.iloc[time_stamp] > 0.01:
+				if abs(price_tmp-price_info.iloc[time_stamp])/price_info.iloc[time_stamp] > 0.02:
 					return 0,0,0
 				else:
 					if ordered_book[price_tmp] > 0:
@@ -137,7 +136,7 @@ class BotOne:
 		
 		if coefficient == 1:
 			for price_tmp in ordered_book:
-				if abs(price_tmp-price_info.iloc[time_stamp])/price_info.iloc[time_stamp] > 0.01:
+				if abs(price_tmp-price_info.iloc[time_stamp])/price_info.iloc[time_stamp] > 0.02:
 					return 0,0,0
 				else:
 					if ordered_book[price_tmp] < 0:
@@ -149,7 +148,7 @@ class BotOne:
 							price = price_tmp
 		elif coefficient == -1:
 			for price_tmp in ordered_book:
-				if abs(price_tmp-price_info.iloc[time_stamp])/price_info.iloc[time_stamp] > 0.01:
+				if abs(price_tmp-price_info.iloc[time_stamp])/price_info.iloc[time_stamp] > 0.02:
 					return 0,0,0
 				else:
 					if ordered_book[price_tmp] > 0:
@@ -189,7 +188,7 @@ class BotOne:
 		
 		if coefficient == 1:
 			for price_tmp in ordered_book:
-				if abs(price_tmp-price_info.iloc[time_stamp])/price_info.iloc[time_stamp] > 0.01:
+				if abs(price_tmp-price_info.iloc[time_stamp])/price_info.iloc[time_stamp] > 0.02:
 					return 0,0,0
 				else:
 					if ordered_book[price_tmp] < 0:
@@ -201,7 +200,7 @@ class BotOne:
 							price = price_tmp
 		elif coefficient == -1:
 			for price_tmp in ordered_book:
-				if abs(price_tmp-price_info.iloc[time_stamp])/price_info.iloc[time_stamp] > 0.01:
+				if abs(price_tmp-price_info.iloc[time_stamp])/price_info.iloc[time_stamp] > 0.02:
 					return 0,0,0
 				else:
 					if ordered_book[price_tmp] > 0:
@@ -241,7 +240,7 @@ class BotOne:
 		
 		if coefficient == 1:
 			for price_tmp in ordered_book:
-				if abs(price_tmp-price_info.iloc[time_stamp])/price_info.iloc[time_stamp] > 0.01:
+				if abs(price_tmp-price_info.iloc[time_stamp])/price_info.iloc[time_stamp] > 0.02:
 					return 0,0,0
 				else:
 					if ordered_book[price_tmp] < 0:
@@ -253,7 +252,7 @@ class BotOne:
 							price = price_tmp
 		elif coefficient == -1:
 			for price_tmp in ordered_book:
-				if abs(price_tmp-price_info.iloc[time_stamp])/price_info.iloc[time_stamp] > 0.01:
+				if abs(price_tmp-price_info.iloc[time_stamp])/price_info.iloc[time_stamp] > 0.02:
 					return 0,0,0
 				else:
 					if ordered_book[price_tmp] > 0:
@@ -276,7 +275,7 @@ class BotOne:
 			return 0, 0, 0
 
 	def crazy_bidder(self, current_price, share_lower_limit=20, share_upper_limit=70):
-		buy_or_sell = random.choice([-1, 0, 0, 0, 0, 0, 0, 1])
+		buy_or_sell = random.choice([-1, 0, 0, 1])
 		if buy_or_sell == 0:
 			return 0, 0
 		elif buy_or_sell == -1:
@@ -313,7 +312,7 @@ class BotOne:
 			print("No translation should proceed. \n")
 	
 	def crazy_accepter(self, order_book):
-		action = random.choice([0, 0, 0, 0, 0, 0, 0, 1])
+		action = random.choice([0, 0, 1])
 		if len(order_book) == 0:
 			return 0, 0
 		elif action == 1:
@@ -323,7 +322,7 @@ class BotOne:
 			return 0,0
 	
 	def crazy_trader(self):
-		coefficient = random.choice([-1, 0, 0, 0,  1])
+		coefficient = random.choice([-1, 0, 0,  1])
 		return coefficient
 
 # price_data = pdr.get_data_yahoo("AAPL", "2015-3-9", "2017-1-1")

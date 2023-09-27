@@ -30,7 +30,6 @@ def sell_all_holdings():
         SELECT uid, cost FROM portfolio;
     """)
     results = list(cur.fetchall())
-    print(results)
     for i in range(len(results)):
         cur.execute(f"""
             UPDATE users SET cashvalue = (cashvalue+{round(results[i][1], 2)})
@@ -304,7 +303,7 @@ def bidder(result_queue, price_info, time_stamp, shares=50, split=50):
 
 
 if __name__ == '__main__':
-    start_time = time.time() - 60*60*24*17
+    start_time = time.time() - 60*60*24*10
 
     bot1 = BotOne()
     bot2 = BotThree()
@@ -354,18 +353,18 @@ if __name__ == '__main__':
         "wrkn": wrkn_price[0]
     }
 
-    # register_bot("http://127.0.0.1:5000/register-bot",
-    #              "MysticAdventurer", initial_price)  # ma_bot
-    # register_bot("http://127.0.0.1:5000/register-bot",
-    #              "MagicRider", initial_price)  # mean_reversion_bot
-    # register_bot("http://127.0.0.1:5000/register-bot",
-    #              "DiamondCrystal", initial_price)  # donchian_bot
-    # register_bot("http://127.0.0.1:5000/register-bot",
-    #              "MadInvestor", initial_price)  # crazy_bot
-    # register_bot("http://127.0.0.1:5000/register-bot",
-    #              "Arima", initial_price)  # arima_bot
-    # register_bot("http://127.0.0.1:5000/register-bot",
-    #              "KnightNexus", initial_price)  # KNN
+    register_bot("http://127.0.0.1:5000/register-bot",
+                 "MysticAdventurer", initial_price)  # ma_bot
+    register_bot("http://127.0.0.1:5000/register-bot",
+                 "MagicRider", initial_price)  # mean_reversion_bot
+    register_bot("http://127.0.0.1:5000/register-bot",
+                 "DiamondCrystal", initial_price)  # donchian_bot
+    register_bot("http://127.0.0.1:5000/register-bot",
+                 "MadInvestor", initial_price)  # crazy_bot
+    register_bot("http://127.0.0.1:5000/register-bot",
+                 "Arima", initial_price)  # arima_bot
+    register_bot("http://127.0.0.1:5000/register-bot",
+                 "KnightNexus", initial_price)  # KNN
 
     # initial_index = int(time.time()-start_time)
     index = int(time.time()-start_time)

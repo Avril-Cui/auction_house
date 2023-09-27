@@ -1,7 +1,6 @@
 from cgi import test
 import random
 import math
-import datetime
 import matplotlib.pyplot as plt
 import pandas as pd
 from pandas_datareader import data as pdr

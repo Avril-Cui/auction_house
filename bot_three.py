@@ -1,7 +1,6 @@
 import pandas as pd
 pd.options.mode.chained_assignment = None
 import numpy as np
-from pandas_datareader import data as pdr
 import yfinance as yf
 yf.pdr_override()
 import warnings
@@ -9,7 +8,6 @@ warnings.filterwarnings("ignore")
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
 from statsmodels.tsa.arima.model import ARIMA
-import matplotlib.pyplot as plt
 
 # import psycopg2
 # conn = psycopg2.connect(

@@ -13,3 +13,4 @@ yfinance
 gunicorn
 python-dotenv
 scikit-learn
+statsmodels

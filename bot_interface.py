@@ -427,7 +427,7 @@ if __name__ == '__main__':
         print(f"requesting: {bot_data['bidder']}")
 
         response = requests.request(
-            "POST", "http://127.0.0.1:5000/bot-actions", data=json.dumps(bot_data))
+            "POST", "https://aspect-server.onrender.com/bot-actions", data=json.dumps(bot_data))
         index += int(time.time()-begin_time)
         time.sleep(1)
 
